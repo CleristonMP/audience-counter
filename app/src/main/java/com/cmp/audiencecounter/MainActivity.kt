@@ -23,9 +23,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -37,20 +39,46 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
+import com.cmp.audiencecounter.datastore.AudienceCounterDataStore
 import com.cmp.audiencecounter.ui.theme.AudienceCounterTheme
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
+
+    private lateinit var dataStore: AudienceCounterDataStore
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        dataStore = AudienceCounterDataStore(applicationContext)
+
         enableEdgeToEdge()
         setContent {
             AudienceCounterTheme {
+                val savedAudiences = remember { mutableStateListOf<Pair<String, Int>>() }
+
+                // Inicialize com as assistências recuperadas do DataStore
+                LaunchedEffect(Unit) {
+                    dataStore.audiencesFlow.collect { storedAudiences ->
+                        savedAudiences.clear()
+                        savedAudiences.addAll(storedAudiences)
+                    }
+                }
+
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     AudienceCounterLayout(
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
+                        savedAudiences = savedAudiences,
+                        onSaveAudiences = { audiences ->
+                            // Salvar as contagens no DataStore
+                            lifecycleScope.launch {
+                                dataStore.saveAudiences(audiences)
+                            }
+                        }
                     )
                 }
             }
@@ -59,9 +87,13 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun AudienceCounterLayout(modifier: Modifier = Modifier) {
+fun AudienceCounterLayout(
+    modifier: Modifier = Modifier,
+    savedAudiences: List<Pair<String, Int>>,
+    onSaveAudiences: (List<Pair<String, Int>>) -> Unit
+) {
     var audience by remember { mutableIntStateOf(0) }
-    var savedAudiences = remember { mutableStateListOf<Pair<String, Int>>() }
+    var isSaving by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -87,10 +119,9 @@ fun AudienceCounterLayout(modifier: Modifier = Modifier) {
                     fontWeight = FontWeight.Bold
                 )
                 savedAudiences
-                    .sortedByDescending { it.second }
-                    .takeLast(3)
-                    .forEach { (count, dateTime) ->
-                        Text("$count - $dateTime")
+                    .take(3)
+                    .forEach { (dateTime, count) ->
+                        Text("$dateTime - $count pessoas")
                     }
             }
         }
@@ -129,17 +160,26 @@ fun AudienceCounterLayout(modifier: Modifier = Modifier) {
             }
 
             // Botão para salvar a última assistência
-            Button(onClick = {
-                val currentDate = SimpleDateFormat(
-                    "dd/MM/yyyy HH:mm:ss",
-                    Locale.getDefault()
-                )
-                    .format(
-                    Date()
-                )
-                savedAudiences.add(0, currentDate to audience) // Adiciona a nova contagem no início da lista
-                if (savedAudiences.size > 3) savedAudiences.removeLast() // Limita as últimas 3 contagens
-            }) {
+            Button(
+                onClick = {
+                    if (!isSaving) {
+                        isSaving = true // Impede que múltiplos cliques sejam registrados
+                        val currentDate = SimpleDateFormat(
+                            "dd/MM/yyyy HH:mm",
+                            Locale.getDefault()
+                        ).format(Date())
+                        val updatedList  = mutableListOf<Pair<String, Int>>().apply {
+                            addAll(savedAudiences)
+                            add(0, currentDate to audience)
+                            if (size > 3) removeLast()
+                        }
+                        onSaveAudiences(updatedList)
+                        audience = 0
+                        isSaving = false
+                    }
+                },
+                enabled = !isSaving // Desativa o botão enquanto está salvando
+            ) {
                 Text("Salvar")
             }
         }
@@ -160,10 +200,10 @@ fun AudienceCounterLayout(modifier: Modifier = Modifier) {
                         shape = RoundedCornerShape(16.dp),
                         clip = true
                     )
-                    .background(Color(237, 130, 86))
+                    .background(Color(237 / 255f, 130 / 255f, 86 / 255f))
                     .align(Alignment.Bottom),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(237, 130, 86),
+                    containerColor = Color(237 / 255f, 130 / 255f, 86 / 255f),
                     contentColor = Color.White
                 )
             ) {
@@ -183,9 +223,9 @@ fun AudienceCounterLayout(modifier: Modifier = Modifier) {
                         shape = RoundedCornerShape(16.dp),
                         clip = true
                     )
-                    .background(Color(73, 116, 145)),
+                    .background(Color(73 / 255f, 116 / 255f, 145 / 255f)),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(73, 116, 145),
+                    containerColor = Color(73 / 255f, 116 / 255f, 145 / 255f),
                     contentColor = Color.White
                 )
             ) {
@@ -206,6 +246,9 @@ fun AudienceCounterLayout(modifier: Modifier = Modifier) {
 @Composable
 fun GreetingPreview() {
     AudienceCounterTheme {
-        AudienceCounterLayout()
+        AudienceCounterLayout(
+            savedAudiences = listOf("12/09/2024 14:35:21" to 100, "11/09/2024 15:10:10" to 80),
+            onSaveAudiences = {}
+        )
     }
 }
