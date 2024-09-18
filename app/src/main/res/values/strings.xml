@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">Audience Counter</string>
+    <string name="app_title">Contador de Assistência</string>
+    <string name="empty_audience_list">Nenhuma assistência salva</string>
+    <string name="saved_audience_display_text">Contagens Salvas (Rolável):</string>
+    <string name="saved_audiences_presentation_text">%1$s - %2$s pessoas</string>
+    <string name="reset_button_text">Zerar</string>
+    <string name="save_button_text">Salvar</string>
+    <string name="developer_credits">Criado por Cleriston Pereira</string>
+    <string name="clear_button_text">Limpar contagens</string>
+    <string name="confirmation_dialog_message">Está certo sobre limpar as contagens?</string>
+    <string name="confirmation_dialog_title">Confirme a deleção</string>
+    <string name="confirm_button_text">Limpar registros</string>
+    <string name="cancel_button_text">Cancelar</string>
 </resources>

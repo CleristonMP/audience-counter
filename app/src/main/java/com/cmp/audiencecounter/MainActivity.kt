@@ -1,11 +1,12 @@
 package com.cmp.audiencecounter
 
 import android.os.Bundle
+import android.text.format.DateFormat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,7 +18,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
@@ -35,6 +41,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -43,9 +51,7 @@ import androidx.lifecycle.lifecycleScope
 import com.cmp.audiencecounter.datastore.AudienceCounterDataStore
 import com.cmp.audiencecounter.ui.theme.AudienceCounterTheme
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
@@ -56,7 +62,7 @@ class MainActivity : ComponentActivity() {
 
         dataStore = AudienceCounterDataStore(applicationContext)
 
-        enableEdgeToEdge()
+//        enableEdgeToEdge()
         setContent {
             AudienceCounterTheme {
                 val savedAudiences = remember { mutableStateListOf<Pair<String, Int>>() }
@@ -94,6 +100,13 @@ fun AudienceCounterLayout(
 ) {
     var audience by remember { mutableIntStateOf(0) }
     var isSaving by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
+
+    val formattedDateTime = with(LocalContext.current) {
+        val formatter = DateFormat.getDateFormat(this)
+        val timeFormatter = DateFormat.getTimeFormat(this)
+        formatter.format(Date()) + " " + timeFormatter.format(Date())
+    }
 
     Column(
         modifier = Modifier
@@ -103,30 +116,83 @@ fun AudienceCounterLayout(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Contador de Assistência",
+            text = stringResource(R.string.app_title),
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(32.dp))
-        // Coluna para exibir as últimas 3 assistências salvas
+
+        // Coluna para exibir as assistências salvas
         Column {
-            if (savedAudiences.isEmpty()) {
-                Text("Nenhuma assistência salva")
-            } else {
-                Text(
-                    text = "Últimas 3 assistências salvas:",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                savedAudiences
-                    .take(3)
-                    .forEach { (dateTime, count) ->
-                        Text("$dateTime - $count pessoas")
+            Text(
+                text = if (savedAudiences.isEmpty()) {
+                    stringResource(R.string.empty_audience_list)
+                } else {
+                    stringResource(R.string.saved_audience_display_text)
+                },
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+            LazyColumn(
+                modifier = Modifier
+                    .height(68.dp) // Define a altura fixa da caixa
+            ) {
+                if (savedAudiences.isEmpty()) {
+                    item {
+                        Spacer(modifier = Modifier.height(68.dp))
                     }
+                } else {
+                    items(savedAudiences) { (dateTime, count) ->
+                        Text(
+                            stringResource(
+                                R.string.saved_audiences_presentation_text,
+                                dateTime,
+                                count
+                            )
+                        )
+                    }
+                }
+            }
+
+            Text(
+                text = stringResource(R.string.clear_button_text),
+                fontSize = 16.sp,
+                color = if (savedAudiences.isEmpty()) Color.LightGray else Color.Blue,
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .clickable(
+                        enabled = savedAudiences.isNotEmpty(),
+                        onClick = { showDialog = true }
+                    )
+            )
+
+            if (showDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDialog = false },
+                    title = { Text(stringResource(R.string.confirmation_dialog_title)) },
+                    text = { Text(stringResource(R.string.confirmation_dialog_message)) },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                onSaveAudiences(emptyList())
+                                showDialog = false
+                            }
+                        ) {
+                            Text(stringResource(R.string.confirm_button_text))
+                        }
+                    },
+                    dismissButton = {
+                        Button(
+                            onClick = { showDialog = false }
+                        ) {
+                            Text(stringResource(R.string.cancel_button_text))
+                        }
+                    }
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(216.dp))
+        Spacer(modifier = Modifier.height(104.dp))
 
         // Display do número de assistências
         Box(
@@ -155,8 +221,19 @@ fun AudienceCounterLayout(
             horizontalArrangement = Arrangement.SpaceAround
         ) {
             // Botão para zerar o contador
-            Button(onClick = { audience = 0 }) {
-                Text(text = "Zerar")
+            Button(
+                onClick = { audience = 0 },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = Color.DarkGray
+                ),
+                modifier = Modifier.border(
+                    width = 1.dp,
+                    color = Color.DarkGray,
+                    shape = RoundedCornerShape(16.dp)
+                )
+            ) {
+                Text(text = stringResource(R.string.reset_button_text))
             }
 
             // Botão para salvar a última assistência
@@ -164,23 +241,22 @@ fun AudienceCounterLayout(
                 onClick = {
                     if (!isSaving) {
                         isSaving = true // Impede que múltiplos cliques sejam registrados
-                        val currentDate = SimpleDateFormat(
-                            "dd/MM/yyyy HH:mm",
-                            Locale.getDefault()
-                        ).format(Date())
-                        val updatedList  = mutableListOf<Pair<String, Int>>().apply {
-                            addAll(savedAudiences)
-                            add(0, currentDate to audience)
-                            if (size > 3) removeLast()
+                        val updatedList = savedAudiences.toMutableList().apply {
+                            add(0, formattedDateTime to audience)
+                            if (size > 100) removeLast()
                         }
                         onSaveAudiences(updatedList)
                         audience = 0
                         isSaving = false
                     }
                 },
-                enabled = !isSaving // Desativa o botão enquanto está salvando
+                enabled = !isSaving, // Desativa o botão enquanto está salvando
+                shape = RoundedCornerShape(8.dp),
             ) {
-                Text("Salvar")
+                Text(
+                    stringResource(R.string.save_button_text),
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
             }
         }
 
@@ -236,7 +312,7 @@ fun AudienceCounterLayout(
 
         Spacer(modifier = Modifier.weight(1f)) // Empurra o rodapé para baixo
         Text(
-            text = "Criado por Cleriston Pereira",
+            text = stringResource(R.string.developer_credits),
             fontSize = 12.sp
         )
     }
@@ -247,7 +323,11 @@ fun AudienceCounterLayout(
 fun GreetingPreview() {
     AudienceCounterTheme {
         AudienceCounterLayout(
-            savedAudiences = listOf("12/09/2024 14:35:21" to 100, "11/09/2024 15:10:10" to 80),
+            savedAudiences = listOf(
+                "13/09/2024 12:00:00" to 50,
+                "12/09/2024 14:35:21" to 100,
+                "11/09/2024 15:10:10" to 80
+            ),
             onSaveAudiences = {}
         )
     }

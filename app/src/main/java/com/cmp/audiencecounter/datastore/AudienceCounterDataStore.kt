@@ -16,8 +16,8 @@ class AudienceCounterDataStore(private val context: Context) {
 
     // Função para salvar as contagens
     suspend fun saveAudiences(audiences: List<Pair<String, Int>>) {
-        val savedString = audiences.joinToString(";") { "${it.first},${it.second}" }
-        Log.d("AudienceCounterDataStore", "Saving: $savedString")
+        val limitedAudiences = audiences.take(100) // Limita a 100 registros
+        val savedString = limitedAudiences.joinToString(";") { "${it.first},${it.second}" }
         context.dataStore.edit { preferences ->
             preferences[AUDIENCE_KEY] = savedString
         }
@@ -27,7 +27,6 @@ class AudienceCounterDataStore(private val context: Context) {
     val audiencesFlow: Flow<List<Pair<String, Int>>> = context.dataStore.data
         .map { preferences ->
             val savedString = preferences[AUDIENCE_KEY] ?: ""
-            Log.d("AudienceCounterDataStore", "Loaded: $savedString")
             if (savedString.isNotEmpty()) {
                 savedString.split(";").map {
                     val (date, count) = it.split(",")
