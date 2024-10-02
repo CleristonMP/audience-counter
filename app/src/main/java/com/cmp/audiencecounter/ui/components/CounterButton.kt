@@ -9,7 +9,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -25,7 +24,6 @@ fun CounterButton(
     modifier: Modifier = Modifier,
     size: Dp,
     fontSize: TextUnit,
-    shadowElevation: Dp = 0.dp,
     shadowShapeSize: Dp = 0.dp,
 ) {
     Button(
@@ -33,12 +31,7 @@ fun CounterButton(
         modifier = modifier
             .size(size)
             .clip(RoundedCornerShape(shadowShapeSize))
-            .background(backgroundColor)
-            .shadow(
-                elevation = shadowElevation,
-                shape = RoundedCornerShape(shadowShapeSize),
-                clip = true
-            ),
+            .background(backgroundColor),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor
