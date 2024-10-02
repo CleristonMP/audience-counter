@@ -129,7 +129,6 @@ fun DirectCounterLayout(
                 containerColor = Color(237 / 255f, 130 / 255f, 86 / 255f),
                 size = 60.dp,
                 fontSize = 24.sp,
-                shadowElevation = 12.dp,
                 shadowShapeSize = 16.dp,
                 contentColor = Color.White
             )
@@ -143,7 +142,6 @@ fun DirectCounterLayout(
                 containerColor = Color(73 / 255f, 116 / 255f, 145 / 255f),
                 size = 120.dp,
                 fontSize = 48.sp,
-                shadowElevation = 12.dp,
                 shadowShapeSize = 16.dp,
                 contentColor = Color.White
             )

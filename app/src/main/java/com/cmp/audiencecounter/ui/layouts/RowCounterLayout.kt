@@ -161,7 +161,6 @@ fun RowCounterLayout(
                         modifier = Modifier.align(Alignment.Bottom),
                         size = 60.dp,
                         fontSize = 24.sp,
-                        shadowElevation = 12.dp,
                         shadowShapeSize = 16.dp,
                         contentColor = Color.White
                     )
@@ -175,7 +174,6 @@ fun RowCounterLayout(
                         containerColor = Color(73 / 255f, 116 / 255f, 145 / 255f),
                         size = 98.dp,
                         fontSize = 48.sp,
-                        shadowElevation = 12.dp,
                         shadowShapeSize = 16.dp,
                         contentColor = Color.White
                     )
