@@ -12,4 +12,15 @@
     <string name="confirmation_dialog_title">Confirme a deleção</string>
     <string name="confirm_button_text">Limpar registros</string>
     <string name="cancel_button_text">Cancelar</string>
+    <string name="start_new_count">Iniciar Nova Contagem</string>
+    <string name="number_of_rows">Quantidade de Fileiras</string>
+    <string name="row_count_text">Contagem da Fileira %1$s</string>
+    <string name="next_row">Próxima Fileira</string>
+    <string name="finish_counting">Finalizar Contagem</string>
+    <string name="counts_by_row_text">Contagens por Fileira:</string>
+    <string name="row_count_tracking_text">Fileira %1$s: %2$s pessoas</string>
+    <string name="total_people">Total de Pessoas: %1$s</string>
+    <string name="save_total">Salvar Total</string>
+    <string name="direct_count_tab_title">Contagem Direta</string>
+    <string name="row_count_tab_title">Contagem por Fileira</string>
 </resources>
