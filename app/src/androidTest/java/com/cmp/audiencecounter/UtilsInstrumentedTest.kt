@@ -39,7 +39,7 @@ class UtilsInstrumentedTest {
     fun testDateIsToday() {
         composeTestRule.setContent {
             val currentDate = getCurrentFormattedDate()
-            val expectedDate = SimpleDateFormat("M/d/yy h:mm a", Locale.getDefault()).format(Date())
+            val expectedDate = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
 
             Log.d("Test", "currentDate: $currentDate")
             Log.d("Test", "expectedDate: $expectedDate")
@@ -54,7 +54,7 @@ class UtilsInstrumentedTest {
             val currentDate = getCurrentFormattedDate()
             Log.d("Test", "currentDate: $currentDate")
 
-            val regex = Regex("""\d{1,2}/\d{1,2}/\d{2} \d{1,2}:\d{2} [APM]{2}""")
+            val regex = Regex("""\d{2}/\d{2}/\d{4} \d{2}:\d{2}""")
             Log.d("Test", "Regex match: ${regex.matches(currentDate)}")
 
             assertTrue("A data não está no formato correto", regex.matches(currentDate))

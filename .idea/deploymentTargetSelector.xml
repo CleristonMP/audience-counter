@@ -5,22 +5,19 @@
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="testGetCurrentFormattedDate()">
+      <SelectionState runConfigName="testSavedAudiencesDisplayShowsCorrectAudiences()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="UtilsInstrumentedTest">
+      <SelectionState runConfigName="Tests in 'com.cmp.audiencecounter'">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
       <SelectionState runConfigName="testDateIsToday()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="NumberInputFieldTest">
+      <SelectionState runConfigName="UtilsInstrumentedTest">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
       <SelectionState runConfigName="testDateFormatIsCorrect()">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
-      <SelectionState runConfigName="Tests in 'com.cmp.audiencecounter'">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

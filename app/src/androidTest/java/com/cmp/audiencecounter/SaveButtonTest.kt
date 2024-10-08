@@ -1,6 +1,5 @@
 package com.cmp.audiencecounter
 
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -13,9 +12,8 @@ class SaveButtonTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    @Composable
     @Test
-    fun TestSaveButtonClick() {
+    fun testSaveButtonClick() {
         var wasClicked = false
 
         composeTestRule.setContent {
