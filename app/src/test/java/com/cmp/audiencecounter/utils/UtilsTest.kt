@@ -1,4 +1,4 @@
-package com.cmp.audiencecounter
+package com.cmp.audiencecounter.utils
 
 import org.junit.Assert.assertTrue
 import org.junit.Test

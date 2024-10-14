@@ -1,4 +1,4 @@
-package com.cmp.audiencecounter
+package com.cmp.audiencecounter.components
 
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList

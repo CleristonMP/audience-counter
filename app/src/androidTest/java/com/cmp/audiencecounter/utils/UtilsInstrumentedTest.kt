@@ -1,9 +1,8 @@
-package com.cmp.audiencecounter
+package com.cmp.audiencecounter.utils
 
 import android.util.Log
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.cmp.audiencecounter.utils.getCurrentFormattedDate
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule

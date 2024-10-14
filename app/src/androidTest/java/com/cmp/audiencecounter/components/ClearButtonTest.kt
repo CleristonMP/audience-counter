@@ -1,4 +1,4 @@
-package com.cmp.audiencecounter
+package com.cmp.audiencecounter.components
 
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule

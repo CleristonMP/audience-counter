@@ -2,22 +2,22 @@
 <project version="4">
   <component name="deploymentTargetSelector">
     <selectionStates>
+      <SelectionState runConfigName="testTabsAreDisplayedCorrectly()">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="testSavedAudiencesDisplayShowsCorrectAudiences()">
+      <SelectionState runConfigName="testSavingAudience()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="Tests in 'com.cmp.audiencecounter'">
+      <SelectionState runConfigName="testDirectCounterLayoutDisplaysCorrectly()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="testDateIsToday()">
+      <SelectionState runConfigName="RowCounterLayoutTest">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="UtilsInstrumentedTest">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
-      <SelectionState runConfigName="testDateFormatIsCorrect()">
+      <SelectionState runConfigName="testSaveTotalButtonEnabledAfterAllRows()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>
