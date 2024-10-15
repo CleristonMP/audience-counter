@@ -13,6 +13,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.cmp.audiencecounter.R
 
@@ -65,3 +67,22 @@ fun AudienceCounterWithTabs(
         }
     }
 }
+
+@Preview(showBackground = true, device = Devices.PHONE)
+@Composable
+fun AudienceCounterWithTabsPreview() {
+    AudienceCounterWithTabs(
+        savedAudiences = listOf("12/09/2024 14:35" to 100, "11/09/2024 15:10" to 80),
+        onSaveAudiences = {}
+    )
+}
+
+@Preview(showBackground = true, widthDp = 720, heightDp = 360)
+@Composable
+fun AudienceCounterWithTabsPreviewLandscape() {
+    AudienceCounterWithTabs(
+        savedAudiences = listOf("12/09/2024 14:35" to 100, "11/09/2024 15:10" to 80),
+        onSaveAudiences = {}
+    )
+}
+

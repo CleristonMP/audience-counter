@@ -13,11 +13,12 @@ import com.cmp.audiencecounter.R
 @Composable
 fun SaveButton(
     onClick: () -> Unit,
-    isSaving: Boolean
+    isSaving: Boolean,
+    audience: Int
 ) {
     Button(
         onClick = onClick,
-        enabled = !isSaving, // Desativa o botão enquanto está salvando
+        enabled = !isSaving && audience > 0, // Desativa o botão enquanto está salvando
         shape = RoundedCornerShape(8.dp),
         modifier = Modifier
             .padding(horizontal = 16.dp)

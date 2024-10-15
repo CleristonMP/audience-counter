@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Audience Counter</string>
-    <string name="app_title">Contador de Assistência</string>
     <string name="empty_audience_list">Nenhuma assistência salva</string>
     <string name="saved_audience_display_text">Contagens Salvas (Rolável):</string>
     <string name="saved_audiences_presentation_text">%1$s - %2$s pessoas</string>
