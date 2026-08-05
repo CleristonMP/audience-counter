@@ -1,6 +1,6 @@
 package com.cmp.audiencecounter.components
 
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.sp
 import com.cmp.audiencecounter.ui.components.Footer
