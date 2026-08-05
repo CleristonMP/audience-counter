@@ -240,7 +240,7 @@ fun LandscapeRowCounterLayout(
                         onClick = {
                             val updatedList = savedAudiences.toMutableList().apply {
                                 add(0, formattedDateTime to rowCounts.sum())
-                                if (size > 100) removeLast()
+                                if (size > 100) removeAt(lastIndex)
                             }
                             onSaveTotal(updatedList)
                             rowCounts.clear()

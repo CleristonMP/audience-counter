@@ -96,7 +96,7 @@ fun LandscapeDirectCounterLayout(
                                 onSaving(true) // Impede que múltiplos cliques sejam registrados
                                 val updatedList = savedAudiences.toMutableList().apply {
                                     add(0, formattedDateTime to audience)
-                                    if (size > 100) removeLast()
+                                    if (size > 100) removeAt(lastIndex)
                                 }
                                 onSaveAudiences(updatedList)
                                 onResetCounting()
