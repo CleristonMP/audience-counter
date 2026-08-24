@@ -2,7 +2,9 @@ package com.cmp.audiencecounter.components
 
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import com.cmp.audiencecounter.model.AudienceRecord
 import com.cmp.audiencecounter.ui.components.SavedAudiencesDisplay
+import com.cmp.audiencecounter.utils.formatAudienceTimestamp
 import org.junit.Rule
 import org.junit.Test
 
@@ -13,9 +15,9 @@ class SavedAudiencesDisplayTest {
 
     @Test
     fun testSavedAudiencesDisplayShowsCorrectAudiences() {
-        val audiences: List<Pair<String, Int>> = listOf(
-            "10/07/2024 12:30" to 25,
-            "10/07/2024 16:45" to 30
+        val audiences = listOf(
+            AudienceRecord(1_720_611_000_000L, 25),
+            AudienceRecord(1_720_626_300_000L, 30)
         )
 
         composeTestRule.setContent {
@@ -23,14 +25,15 @@ class SavedAudiencesDisplayTest {
         }
 
         // Verifica se as contagens salvas estão sendo exibidas corretamente
-        audiences.forEach { (dateTime, count) ->
-            composeTestRule.onNodeWithText("$dateTime - $count pessoas").assertExists()
+        audiences.forEach { record ->
+            val dateTime = formatAudienceTimestamp(record.timestampMillis)
+            composeTestRule.onNodeWithText("$dateTime - ${record.count} pessoas").assertExists()
         }
     }
 
     @Test
     fun testSavedAudiencesDisplayEmpty() {
-        val audiences = emptyList<Pair<String, Int>>()
+        val audiences = emptyList<AudienceRecord>()
 
         composeTestRule.setContent {
             SavedAudiencesDisplay(savedAudiences = audiences)

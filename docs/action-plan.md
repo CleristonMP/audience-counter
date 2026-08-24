@@ -17,7 +17,7 @@ As correções serão entregues em fases pequenas e verificáveis. Cada bug corr
 | 2 | Salvamento assíncrono confiável | Concluída |
 | 3 | ViewModel e estado único | Concluída |
 | 4 | Restauração de estado | Concluída |
-| 5 | Tipagem e validação | Pendente |
+| 5 | Tipagem e validação | Concluída |
 | 6 | Correção da contagem por fileiras | Pendente |
 | 7 | Legibilidade e redução de duplicação | Pendente |
 | 8 | Validação final | Pendente |
@@ -160,6 +160,10 @@ Tornar estados inválidos difíceis de representar e eliminar formatos ambíguos
 - A camada de domínio não expõe `Pair<String, Int>`.
 - Entradas inválidas não alteram o estado.
 - Conversões numéricas inseguras foram removidas.
+
+### Decisão técnica
+
+O histórico passa a usar `AudienceRecord`, com timestamp em milissegundos desde a época Unix e contagem positiva. A serialização continua aceitando datas do formato legado para preservar instalações existentes, mas toda nova gravação usa o timestamp numérico estável; a formatação localizada ocorre somente na UI. As abas são representadas por `AudienceCounterTab`, o número de fileiras é limitado a 10.000 e contadores não ultrapassam `Int.MAX_VALUE`. Entradas numéricas inválidas são ignoradas, totais são calculados como `Long` antes da conversão validada e nenhum `lateinit` permanece no código de produção.
 
 ## Fase 6 — Corrigir a contagem por fileiras
 

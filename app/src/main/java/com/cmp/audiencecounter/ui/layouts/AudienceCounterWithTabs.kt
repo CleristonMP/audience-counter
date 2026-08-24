@@ -19,8 +19,10 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.cmp.audiencecounter.R
+import com.cmp.audiencecounter.model.AudienceRecord
 import com.cmp.audiencecounter.presentation.AudienceCounterAction
 import com.cmp.audiencecounter.presentation.AudienceCounterError
+import com.cmp.audiencecounter.presentation.AudienceCounterTab
 import com.cmp.audiencecounter.presentation.AudienceCounterUiState
 
 @Composable
@@ -33,8 +35,8 @@ fun AudienceCounterWithTabs(
     val persistenceErrorMessage = stringResource(R.string.persistence_error_message)
 
     val tabs = listOf(
-        stringResource(R.string.direct_count_tab_title),
-        stringResource(R.string.row_count_tab_title)
+        AudienceCounterTab.DIRECT to stringResource(R.string.direct_count_tab_title),
+        AudienceCounterTab.ROWS to stringResource(R.string.row_count_tab_title)
     )
 
     LaunchedEffect(uiState.error) {
@@ -47,17 +49,17 @@ fun AudienceCounterWithTabs(
     Box(modifier = modifier) {
         Column {
             PrimaryTabRow(
-                selectedTabIndex = uiState.selectedTabIndex,
+                selectedTabIndex = tabs.indexOfFirst { it.first == uiState.selectedTab },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                tabs.forEachIndexed { index, tab ->
+                tabs.forEach { (tab, title) ->
                     Tab(
-                        selected = uiState.selectedTabIndex == index,
-                        onClick = { onAction(AudienceCounterAction.SelectTab(index)) },
+                        selected = uiState.selectedTab == tab,
+                        onClick = { onAction(AudienceCounterAction.SelectTab(tab)) },
                         text = {
                             Text(
-                                text = tab,
-                                fontWeight = if (uiState.selectedTabIndex == index) {
+                                text = title,
+                                fontWeight = if (uiState.selectedTab == tab) {
                                     FontWeight.Bold
                                 } else {
                                     FontWeight.Normal
@@ -69,13 +71,13 @@ fun AudienceCounterWithTabs(
                 }
             }
 
-            when (uiState.selectedTabIndex) {
-                0 -> DirectCounterLayout(
+            when (uiState.selectedTab) {
+                AudienceCounterTab.DIRECT -> DirectCounterLayout(
                     uiState = uiState,
                     onAction = onAction
                 )
 
-                1 -> RowCounterLayout(
+                AudienceCounterTab.ROWS -> RowCounterLayout(
                     uiState = uiState,
                     onAction = onAction
                 )
@@ -94,7 +96,7 @@ fun AudienceCounterWithTabs(
 fun AudienceCounterWithTabsPreview() {
     AudienceCounterWithTabs(
         uiState = AudienceCounterUiState(
-            savedAudiences = listOf("12/09/2024 14:35" to 100, "11/09/2024 15:10" to 80)
+            savedAudiences = listOf(AudienceRecord(1_726_151_700_000, 100))
         ),
         onAction = {}
     )
@@ -105,7 +107,7 @@ fun AudienceCounterWithTabsPreview() {
 fun AudienceCounterWithTabsPreviewLandscape() {
     AudienceCounterWithTabs(
         uiState = AudienceCounterUiState(
-            savedAudiences = listOf("12/09/2024 14:35" to 100, "11/09/2024 15:10" to 80)
+            savedAudiences = listOf(AudienceRecord(1_726_151_700_000, 100))
         ),
         onAction = {}
     )

@@ -14,10 +14,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.cmp.audiencecounter.R
+import com.cmp.audiencecounter.model.AudienceRecord
+import com.cmp.audiencecounter.utils.formatAudienceTimestamp
 
 @Composable
 fun SavedAudiencesDisplay(
-    savedAudiences: List<Pair<String, Int>>,
+    savedAudiences: List<AudienceRecord>,
     modifier: Modifier = Modifier,
     displayHeight: Dp = 68.dp,
     fontSize: TextUnit = 16.sp,
@@ -38,12 +40,12 @@ fun SavedAudiencesDisplay(
                 Spacer(modifier = Modifier.height(displayHeight))
             }
         } else {
-            items(savedAudiences) { (dateTime, count) ->
+            items(savedAudiences) { record ->
                 Text(
                     stringResource(
                         R.string.saved_audiences_presentation_text,
-                        dateTime,
-                        count
+                        formatAudienceTimestamp(record.timestampMillis),
+                        record.count
                     )
                 )
             }

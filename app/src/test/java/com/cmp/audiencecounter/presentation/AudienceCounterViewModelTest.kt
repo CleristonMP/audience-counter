@@ -1,6 +1,8 @@
 package com.cmp.audiencecounter.presentation
 
 import androidx.lifecycle.SavedStateHandle
+import com.cmp.audiencecounter.model.AudienceRecord
+import com.cmp.audiencecounter.model.MAX_ROW_COUNT
 import com.cmp.audiencecounter.repository.AudienceRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,7 +32,7 @@ class AudienceCounterViewModelTest {
 
     @Test
     fun repositoryHistoryIsExposedInUiState() = runTest(mainDispatcherRule.dispatcher) {
-        val history = listOf("24/08/2026 10:15" to 25)
+        val history = listOf(AudienceRecord(1_777_000_000_000L, 25))
         val viewModel = AudienceCounterViewModel(FakeAudienceRepository(history))
 
         runCurrent()
@@ -154,7 +156,7 @@ class AudienceCounterViewModelTest {
 
             viewModel.onAction(AudienceCounterAction.IncrementDirectCount)
             viewModel.onAction(AudienceCounterAction.IncrementDirectCount)
-            viewModel.onAction(AudienceCounterAction.SelectTab(1))
+            viewModel.onAction(AudienceCounterAction.SelectTab(AudienceCounterTab.ROWS))
             viewModel.onAction(AudienceCounterAction.StartRowCount)
             viewModel.onAction(AudienceCounterAction.ChangeRowCount(2))
             viewModel.onAction(AudienceCounterAction.IncrementCurrentRow)
@@ -166,7 +168,7 @@ class AudienceCounterViewModelTest {
             val restoredState = restoredViewModel.uiState.value
 
             assertEquals(2, restoredState.directCount)
-            assertEquals(1, restoredState.selectedTabIndex)
+            assertEquals(AudienceCounterTab.ROWS, restoredState.selectedTab)
             assertEquals(2, restoredState.rowCount)
             assertEquals(2, restoredState.currentRow)
             assertEquals(1, restoredState.peopleInCurrentRow)
@@ -195,13 +197,63 @@ class AudienceCounterViewModelTest {
             assertFalse(restoredViewModel.uiState.value.isSaving)
             assertNull(restoredViewModel.uiState.value.error)
         }
+
+    @Test
+    fun invalidRowCountsDoNotAlterState() = runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = AudienceCounterViewModel(FakeAudienceRepository())
+        runCurrent()
+        viewModel.onAction(AudienceCounterAction.StartRowCount)
+        viewModel.onAction(AudienceCounterAction.ChangeRowCount(5))
+
+        viewModel.onAction(AudienceCounterAction.ChangeRowCount(-1))
+        viewModel.onAction(AudienceCounterAction.ChangeRowCount(MAX_ROW_COUNT + 1))
+
+        assertEquals(5, viewModel.uiState.value.rowCount)
+    }
+
+    @Test
+    fun countersDoNotOverflow() = runTest(mainDispatcherRule.dispatcher) {
+        val savedState = SavedStateHandle(
+            mapOf(
+                "direct_count" to Int.MAX_VALUE,
+                "people_in_current_row" to Int.MAX_VALUE,
+                "is_counting_rows" to true
+            )
+        )
+        val viewModel = AudienceCounterViewModel(FakeAudienceRepository(), savedState)
+        runCurrent()
+
+        viewModel.onAction(AudienceCounterAction.IncrementDirectCount)
+        viewModel.onAction(AudienceCounterAction.IncrementCurrentRow)
+
+        assertEquals(Int.MAX_VALUE, viewModel.uiState.value.directCount)
+        assertEquals(Int.MAX_VALUE, viewModel.uiState.value.peopleInCurrentRow)
+    }
+
+    @Test
+    fun overflowingRowTotalIsNotSaved() = runTest(mainDispatcherRule.dispatcher) {
+        val savedState = SavedStateHandle(
+            mapOf(
+                "row_count" to 2,
+                "completed_row_counts" to arrayListOf(Int.MAX_VALUE, 1)
+            )
+        )
+        val repository = FakeAudienceRepository()
+        val viewModel = AudienceCounterViewModel(repository, savedState)
+        runCurrent()
+
+        viewModel.onAction(AudienceCounterAction.SaveRowTotal)
+        runCurrent()
+
+        assertEquals(emptyList<Int>(), repository.addedCounts)
+    }
 }
 
 private class FakeAudienceRepository(
-    initialAudiences: List<Pair<String, Int>> = emptyList()
+    initialAudiences: List<AudienceRecord> = emptyList()
 ) : AudienceRepository {
     private val audienceState = MutableStateFlow(initialAudiences)
-    override val audiences: Flow<List<Pair<String, Int>>> = audienceState
+    override val audiences: Flow<List<AudienceRecord>> = audienceState
 
     val addedCounts = mutableListOf<Int>()
     var addCalls = 0

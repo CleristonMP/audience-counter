@@ -6,24 +6,28 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.cmp.audiencecounter.utils.getCurrentFormattedDate
+import com.cmp.audiencecounter.model.AudienceRecord
+import com.cmp.audiencecounter.model.MAX_AUDIENCE_COUNT
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 val Context.dataStore by preferencesDataStore(name = "audience_counter")
 
 class AudienceCounterDataStore(
     private val context: Context,
-    private val currentDateProvider: () -> String = ::getCurrentFormattedDate
+    private val currentTimeProvider: () -> Long = System::currentTimeMillis
 ) {
     private val audienceKey = stringPreferencesKey("saved_audiences")
 
     suspend fun addAudience(count: Int) {
+        require(count in 1..MAX_AUDIENCE_COUNT) { "Audience count is out of range" }
         context.dataStore.edit { preferences ->
             val savedAudiences = AudienceSerialization.decode(preferences[audienceKey].orEmpty())
-            val updatedAudiences = listOf(currentDateProvider() to count) + savedAudiences
+            val updatedAudiences = listOf(AudienceRecord(currentTimeProvider(), count)) + savedAudiences
 
             preferences[audienceKey] = AudienceSerialization.encode(
                 updatedAudiences.take(MAX_SAVED_AUDIENCES)
@@ -37,7 +41,7 @@ class AudienceCounterDataStore(
         }
     }
 
-    val audiencesFlow: Flow<List<Pair<String, Int>>> = context.dataStore.data
+    val audiencesFlow: Flow<List<AudienceRecord>> = context.dataStore.data
         .recoverFromReadFailure()
         .map { preferences ->
             AudienceSerialization.decode(preferences[audienceKey].orEmpty())
@@ -52,12 +56,12 @@ internal object AudienceSerialization {
     private const val RECORD_SEPARATOR = ";"
     private const val FIELD_SEPARATOR = ","
 
-    fun encode(audiences: List<Pair<String, Int>>): String =
-        audiences.joinToString(RECORD_SEPARATOR) { (date, count) ->
-            "$date$FIELD_SEPARATOR$count"
+    fun encode(audiences: List<AudienceRecord>): String =
+        audiences.joinToString(RECORD_SEPARATOR) { record ->
+            "${record.timestampMillis}$FIELD_SEPARATOR${record.count}"
         }
 
-    fun decode(serializedAudiences: String): List<Pair<String, Int>> {
+    fun decode(serializedAudiences: String): List<AudienceRecord> {
         if (serializedAudiences.isBlank()) return emptyList()
 
         return serializedAudiences
@@ -65,15 +69,29 @@ internal object AudienceSerialization {
             .mapNotNull(::decodeRecord)
     }
 
-    private fun decodeRecord(record: String): Pair<String, Int>? {
+    private fun decodeRecord(record: String): AudienceRecord? {
         val fields = record.split(FIELD_SEPARATOR, limit = 2)
         if (fields.size != 2) return null
 
-        val date = fields[0].trim()
+        val timestamp = fields[0].trim().toLongOrNull()
+            ?: parseLegacyTimestamp(fields[0].trim())
         val count = fields[1].trim().toIntOrNull()
 
-        return if (date.isNotEmpty() && count != null) date to count else null
+        return if (timestamp != null && timestamp >= 0 && count != null && count > 0) {
+            AudienceRecord(timestamp, count)
+        } else {
+            null
+        }
     }
+
+    private fun parseLegacyTimestamp(value: String): Long? =
+        runCatching {
+            SimpleDateFormat(LEGACY_TIMESTAMP_PATTERN, Locale.getDefault()).apply {
+                isLenient = false
+            }.parse(value)?.time
+        }.getOrNull()
+
+    private const val LEGACY_TIMESTAMP_PATTERN = "dd/MM/yyyy HH:mm"
 }
 
 internal fun Flow<Preferences>.recoverFromReadFailure(): Flow<Preferences> =

@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import com.cmp.audiencecounter.model.MAX_AUDIENCE_COUNT
+import com.cmp.audiencecounter.model.MAX_ROW_COUNT
 import com.cmp.audiencecounter.repository.AudienceRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,15 +22,16 @@ class AudienceCounterViewModel(
 ) : ViewModel() {
     private val mutableUiState = MutableStateFlow(
         AudienceCounterUiState(
-            directCount = savedStateHandle[DIRECT_COUNT_KEY] ?: 0,
-            rowCount = savedStateHandle[ROW_COUNT_KEY] ?: 0,
-            currentRow = savedStateHandle[CURRENT_ROW_KEY] ?: 1,
-            peopleInCurrentRow = savedStateHandle[PEOPLE_IN_CURRENT_ROW_KEY] ?: 0,
-            completedRowCounts = savedStateHandle
-                .get<ArrayList<Int>>(COMPLETED_ROW_COUNTS_KEY)
-                ?.toList()
-                .orEmpty(),
-            selectedTabIndex = savedStateHandle[SELECTED_TAB_INDEX_KEY] ?: 0,
+            directCount = savedCount(DIRECT_COUNT_KEY),
+            rowCount = savedCount(ROW_COUNT_KEY, maximum = MAX_ROW_COUNT),
+            currentRow = savedCount(
+                CURRENT_ROW_KEY,
+                default = 1,
+                maximum = MAX_ROW_COUNT + 1
+            ),
+            peopleInCurrentRow = savedCount(PEOPLE_IN_CURRENT_ROW_KEY),
+            completedRowCounts = savedRowCounts(),
+            selectedTab = savedTab(),
             isCountingRows = savedStateHandle[IS_COUNTING_ROWS_KEY] ?: false
         )
     )
@@ -44,7 +47,7 @@ class AudienceCounterViewModel(
 
     fun onAction(action: AudienceCounterAction) {
         when (action) {
-            is AudienceCounterAction.SelectTab -> selectTab(action.index)
+            is AudienceCounterAction.SelectTab -> selectTab(action.tab)
             is AudienceCounterAction.ChangeRowCount -> changeRowCount(action.count)
             AudienceCounterAction.IncrementDirectCount -> updateDirectCount(1)
             AudienceCounterAction.DecrementDirectCount -> updateDirectCount(-1)
@@ -61,14 +64,14 @@ class AudienceCounterViewModel(
         }
     }
 
-    private fun selectTab(index: Int) {
-        updateState { it.copy(selectedTabIndex = index) }
+    private fun selectTab(tab: AudienceCounterTab) {
+        updateState { it.copy(selectedTab = tab) }
     }
 
     private fun updateDirectCount(change: Int) {
         updateState { state ->
             if (state.isSaving) state else state.copy(
-                directCount = (state.directCount + change).coerceAtLeast(0)
+                directCount = state.directCount.safeChange(change)
             )
         }
     }
@@ -107,8 +110,8 @@ class AudienceCounterViewModel(
 
     private fun changeRowCount(count: Int) {
         updateState { state ->
-            if (state.isSaving) state else state.copy(
-                rowCount = count.coerceAtLeast(0),
+            if (state.isSaving || count !in 0..MAX_ROW_COUNT) state else state.copy(
+                rowCount = count,
                 currentRow = 1,
                 peopleInCurrentRow = 0,
                 completedRowCounts = emptyList()
@@ -119,7 +122,7 @@ class AudienceCounterViewModel(
     private fun updatePeopleInCurrentRow(change: Int) {
         updateState { state ->
             if (state.isSaving || !state.isCountingRows) state else state.copy(
-                peopleInCurrentRow = (state.peopleInCurrentRow + change).coerceAtLeast(0)
+                peopleInCurrentRow = state.peopleInCurrentRow.safeChange(change)
             )
         }
     }
@@ -149,9 +152,10 @@ class AudienceCounterViewModel(
         val state = mutableUiState.value
         if (state.rowCount <= 0 || state.completedRowCounts.size != state.rowCount) return
 
-        val total = state.completedRowCounts.sum()
+        val total = state.completedRowCounts.sumOf { it.toLong() }
+        if (total !in 1..MAX_AUDIENCE_COUNT.toLong()) return
         launchPersistence(
-            operation = { repository.addAudience(total) },
+            operation = { repository.addAudience(total.toInt()) },
             onSuccess = {
                 it.copy(
                     rowCount = 0,
@@ -204,7 +208,7 @@ class AudienceCounterViewModel(
         savedStateHandle[CURRENT_ROW_KEY] = state.currentRow
         savedStateHandle[PEOPLE_IN_CURRENT_ROW_KEY] = state.peopleInCurrentRow
         savedStateHandle[COMPLETED_ROW_COUNTS_KEY] = ArrayList(state.completedRowCounts)
-        savedStateHandle[SELECTED_TAB_INDEX_KEY] = state.selectedTabIndex
+        savedStateHandle[SELECTED_TAB_KEY] = state.selectedTab.name
         savedStateHandle[IS_COUNTING_ROWS_KEY] = state.isCountingRows
     }
 
@@ -230,7 +234,41 @@ class AudienceCounterViewModel(
         const val CURRENT_ROW_KEY = "current_row"
         const val PEOPLE_IN_CURRENT_ROW_KEY = "people_in_current_row"
         const val COMPLETED_ROW_COUNTS_KEY = "completed_row_counts"
-        const val SELECTED_TAB_INDEX_KEY = "selected_tab_index"
+        const val SELECTED_TAB_KEY = "selected_tab"
+        const val LEGACY_SELECTED_TAB_INDEX_KEY = "selected_tab_index"
         const val IS_COUNTING_ROWS_KEY = "is_counting_rows"
+    }
+
+    private fun savedCount(
+        key: String,
+        default: Int = 0,
+        maximum: Int = MAX_AUDIENCE_COUNT
+    ): Int = (savedStateHandle.get<Any>(key) as? Int)
+        ?.takeIf { it in 0..maximum }
+        ?: default
+
+    private fun savedRowCounts(): List<Int> {
+        val values = savedStateHandle.get<Any>(COMPLETED_ROW_COUNTS_KEY) as? List<*>
+            ?: return emptyList()
+        return values.map { value ->
+            (value as? Int)?.takeIf { it in 0..MAX_AUDIENCE_COUNT }
+                ?: return emptyList()
+        }
+    }
+
+    private fun savedTab(): AudienceCounterTab {
+        val tabName = savedStateHandle.get<Any>(SELECTED_TAB_KEY) as? String
+        AudienceCounterTab.entries.firstOrNull { it.name == tabName }?.let { return it }
+
+        return when (savedStateHandle.get<Any>(LEGACY_SELECTED_TAB_INDEX_KEY) as? Int) {
+            1 -> AudienceCounterTab.ROWS
+            else -> AudienceCounterTab.DIRECT
+        }
+    }
+
+    private fun Int.safeChange(change: Int): Int = when {
+        change > 0 && this < MAX_AUDIENCE_COUNT -> this + 1
+        change < 0 && this > 0 -> this - 1
+        else -> this
     }
 }

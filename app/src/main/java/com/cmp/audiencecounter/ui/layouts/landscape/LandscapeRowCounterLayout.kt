@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cmp.audiencecounter.R
+import com.cmp.audiencecounter.model.AudienceRecord
 import com.cmp.audiencecounter.ui.components.ClearButton
 import com.cmp.audiencecounter.ui.components.ConfirmationDialog
 import com.cmp.audiencecounter.ui.components.CounterButton
@@ -43,7 +44,7 @@ fun LandscapeRowCounterLayout(
     currentRow: Int,
     peopleInRow: Int,
     rowCounts: List<Int>,
-    savedAudiences: List<Pair<String, Int>>,
+    savedAudiences: List<AudienceRecord>,
     isSaving: Boolean,
     onSaveTotal: () -> Unit,
     onClearAudiences: () -> Unit,
@@ -116,7 +117,11 @@ fun LandscapeRowCounterLayout(
                     NumberInputField(
                         value = if (rowCount == 0) "" else rowCount.toString(),
                         onValueChange = { input ->
-                            onChangeRowCount(input.toIntOrNull() ?: 0)
+                            if (input.isEmpty()) {
+                                onChangeRowCount(0)
+                            } else {
+                                input.toIntOrNull()?.let(onChangeRowCount)
+                            }
                         },
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
@@ -215,7 +220,7 @@ fun LandscapeRowCounterLayout(
                     verticalArrangement = Arrangement.Center,
                 ) {
                     Spacer(modifier = Modifier.height(48.dp))
-                    val total = rowCounts.sum()
+                    val total = rowCounts.sumOf { it.toLong() }
                     Text(
                         stringResource(
                             R.string.total_people,
@@ -258,7 +263,7 @@ fun LandscapeRowCounterLayoutPreview() {
         currentRow = 6,
         peopleInRow = 0,
         rowCounts = rowCounts,
-        savedAudiences = listOf("12/09/2024 14:35" to 100, "11/09/2024 15:10" to 80),
+        savedAudiences = listOf(AudienceRecord(1_726_151_700_000, 100)),
         isSaving = false,
         onSaveTotal = {},
         onClearAudiences = {},

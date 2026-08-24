@@ -7,33 +7,27 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.text.SimpleDateFormat
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 @Config(manifest = Config.NONE)
 class UtilsTest {
 
     @Test
-    fun getCurrentFormattedDateUsesExpectedFormat() {
-        val formattedDate = getCurrentFormattedDate()
+    fun formatAudienceTimestampUsesExpectedFormat() {
+        val formattedDate = formatAudienceTimestamp(1_777_000_000_000L)
 
         assertTrue(formattedDate.matches(Regex("\\d{2}/\\d{2}/\\d{4} \\d{2}:\\d{2}")))
     }
 
     @Test
-    fun getCurrentFormattedDateRepresentsCurrentMinute() {
+    fun formatAudienceTimestampRepresentsProvidedInstant() {
         val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).apply {
             isLenient = false
         }
-        val beforeCall = System.currentTimeMillis()
-        val formattedDate = getCurrentFormattedDate()
-        val afterCall = System.currentTimeMillis()
+        val timestamp = 1_777_000_000_000L
+        val formattedDate = formatAudienceTimestamp(timestamp)
         val parsedDate = requireNotNull(formatter.parse(formattedDate))
-        val parsedMinute = TimeUnit.MILLISECONDS.toMinutes(parsedDate.time)
 
-        val firstPossibleMinute = TimeUnit.MILLISECONDS.toMinutes(beforeCall)
-        val lastPossibleMinute = TimeUnit.MILLISECONDS.toMinutes(afterCall)
-
-        assertTrue(parsedMinute in firstPossibleMinute..lastPossibleMinute)
+        assertTrue(kotlin.math.abs(parsedDate.time - timestamp) < 60_000)
     }
 }

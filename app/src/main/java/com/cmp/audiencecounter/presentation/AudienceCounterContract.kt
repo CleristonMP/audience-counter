@@ -1,13 +1,15 @@
 package com.cmp.audiencecounter.presentation
 
+import com.cmp.audiencecounter.model.AudienceRecord
+
 data class AudienceCounterUiState(
-    val savedAudiences: List<Pair<String, Int>> = emptyList(),
+    val savedAudiences: List<AudienceRecord> = emptyList(),
     val directCount: Int = 0,
     val rowCount: Int = 0,
     val currentRow: Int = 1,
     val peopleInCurrentRow: Int = 0,
     val completedRowCounts: List<Int> = emptyList(),
-    val selectedTabIndex: Int = 0,
+    val selectedTab: AudienceCounterTab = AudienceCounterTab.DIRECT,
     val isCountingRows: Boolean = false,
     val isSaving: Boolean = false,
     val error: AudienceCounterError? = null
@@ -17,8 +19,13 @@ enum class AudienceCounterError {
     PERSISTENCE
 }
 
+enum class AudienceCounterTab {
+    DIRECT,
+    ROWS
+}
+
 sealed interface AudienceCounterAction {
-    data class SelectTab(val index: Int) : AudienceCounterAction
+    data class SelectTab(val tab: AudienceCounterTab) : AudienceCounterAction
     data class ChangeRowCount(val count: Int) : AudienceCounterAction
 
     data object IncrementDirectCount : AudienceCounterAction

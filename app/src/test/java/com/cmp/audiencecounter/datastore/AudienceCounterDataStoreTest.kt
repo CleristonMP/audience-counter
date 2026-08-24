@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.cmp.audiencecounter.model.AudienceRecord
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -21,6 +22,8 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Locale
 import java.util.concurrent.CancellationException
 
 @RunWith(RobolectricTestRunner::class)
@@ -33,7 +36,7 @@ class AudienceCounterDataStoreTest {
     @Before
     fun setUp() = runBlocking {
         context = RuntimeEnvironment.getApplication()
-        dataStore = AudienceCounterDataStore(context) { "24/08/2026 10:15" }
+        dataStore = AudienceCounterDataStore(context) { FIXED_TIMESTAMP }
         dataStore.clearAudiences()
     }
 
@@ -48,7 +51,7 @@ class AudienceCounterDataStoreTest {
         dataStore.addAudience(18)
 
         assertEquals(
-            listOf("24/08/2026 10:15" to 18, "24/08/2026 10:15" to 25),
+            listOf(AudienceRecord(FIXED_TIMESTAMP, 18), AudienceRecord(FIXED_TIMESTAMP, 25)),
             dataStore.audiencesFlow.first()
         )
     }
@@ -59,7 +62,7 @@ class AudienceCounterDataStoreTest {
             dataStore.addAudience(count)
         }
 
-        assertEquals((105 downTo 6).toList(), dataStore.audiencesFlow.first().map { it.second })
+        assertEquals((105 downTo 6).toList(), dataStore.audiencesFlow.first().map { it.count })
     }
 
     @Test
@@ -68,18 +71,18 @@ class AudienceCounterDataStoreTest {
 
         dataStore.clearAudiences()
 
-        assertEquals(emptyList<Pair<String, Int>>(), dataStore.audiencesFlow.first())
+        assertEquals(emptyList<AudienceRecord>(), dataStore.audiencesFlow.first())
     }
 
     @Test
     fun addAudienceGeneratesTimestampInsideTheSaveOperation() = runBlocking {
-        var currentTimestamp = "before-save"
+        var currentTimestamp = 100L
         val timestampedDataStore = AudienceCounterDataStore(context) { currentTimestamp }
-        currentTimestamp = "save-time"
+        currentTimestamp = 200L
 
         timestampedDataStore.addAudience(25)
 
-        assertEquals(listOf("save-time" to 25), timestampedDataStore.audiencesFlow.first())
+        assertEquals(listOf(AudienceRecord(200L, 25)), timestampedDataStore.audiencesFlow.first())
     }
 
     @Test
@@ -90,7 +93,7 @@ class AudienceCounterDataStoreTest {
             }.awaitAll()
         }
 
-        val storedCounts = dataStore.audiencesFlow.first().map { it.second }
+        val storedCounts = dataStore.audiencesFlow.first().map { it.count }
         assertEquals(50, storedCounts.size)
         assertEquals((1..50).toSet(), storedCounts.toSet())
     }
@@ -108,14 +111,17 @@ class AudienceCounterDataStoreTest {
         }
 
         assertEquals(
-            listOf("24/08/2026 10:15" to 25, "24/08/2026 10:45" to 40),
+            listOf(
+                AudienceRecord(parseLegacyTimestamp("24/08/2026 10:15"), 25),
+                AudienceRecord(parseLegacyTimestamp("24/08/2026 10:45"), 40)
+            ),
             dataStore.audiencesFlow.first()
         )
     }
 
     @Test
     fun decodeReturnsEmptyListForEmptyContent() {
-        assertEquals(emptyList<Pair<String, Int>>(), AudienceSerialization.decode(""))
+        assertEquals(emptyList<AudienceRecord>(), AudienceSerialization.decode(""))
     }
 
     @Test
@@ -125,13 +131,16 @@ class AudienceCounterDataStoreTest {
             ",10",
             "24/08/2026 10:15,",
             "24/08/2026 10:15,not-a-number",
-            "24/08/2026 10:15,10,unexpected"
+            "24/08/2026 10:15,10,unexpected",
+            "$FIXED_TIMESTAMP,0",
+            "$FIXED_TIMESTAMP,-1",
+            "-1,10"
         )
 
         invalidRecords.forEach { invalidRecord ->
             assertEquals(
                 "Record should be rejected: $invalidRecord",
-                emptyList<Pair<String, Int>>(),
+                emptyList<AudienceRecord>(),
                 AudienceSerialization.decode(invalidRecord)
             )
         }
@@ -151,5 +160,24 @@ class AudienceCounterDataStoreTest {
         assertThrows(CancellationException::class.java) {
             runBlocking { failingFlow.recoverFromReadFailure().first() }
         }
+    }
+
+    @Test
+    fun serializationUsesStableNumericTimestamp() {
+        val record = AudienceRecord(FIXED_TIMESTAMP, 25)
+
+        assertEquals("$FIXED_TIMESTAMP,25", AudienceSerialization.encode(listOf(record)))
+        assertEquals(listOf(record), AudienceSerialization.decode("$FIXED_TIMESTAMP,25"))
+    }
+
+    private fun parseLegacyTimestamp(value: String): Long =
+        requireNotNull(
+            SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).apply {
+                isLenient = false
+            }.parse(value)
+        ).time
+
+    private companion object {
+        const val FIXED_TIMESTAMP = 1_777_000_000_000L
     }
 }

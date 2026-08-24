@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.cmp.audiencecounter.presentation.AudienceCounterAction
 import com.cmp.audiencecounter.presentation.AudienceCounterError
+import com.cmp.audiencecounter.presentation.AudienceCounterTab
 import com.cmp.audiencecounter.presentation.AudienceCounterUiState
 import com.cmp.audiencecounter.ui.layouts.AudienceCounterWithTabs
 import org.junit.Assert.assertEquals
@@ -39,7 +40,7 @@ class AudienceCounterWithTabsTest {
                 uiState = uiState,
                 onAction = { action ->
                     if (action is AudienceCounterAction.SelectTab) {
-                        uiState = uiState.copy(selectedTabIndex = action.index)
+                        uiState = uiState.copy(selectedTab = action.tab)
                     }
                 }
             )

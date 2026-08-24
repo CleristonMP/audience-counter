@@ -20,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cmp.audiencecounter.R
+import com.cmp.audiencecounter.model.AudienceRecord
 import com.cmp.audiencecounter.ui.components.ClearButton
 import com.cmp.audiencecounter.ui.components.ConfirmationDialog
 import com.cmp.audiencecounter.ui.components.CounterButton
@@ -31,7 +32,7 @@ import com.cmp.audiencecounter.ui.components.SavedAudiencesDisplay
 
 @Composable
 fun LandscapeDirectCounterLayout(
-    savedAudiences: List<Pair<String, Int>>,
+    savedAudiences: List<AudienceRecord>,
     audience: Int,
     showDialog: Boolean,
     isSaving: Boolean,
@@ -143,7 +144,7 @@ fun LandscapeDirectCounterLayout(
 @Composable
 fun LandscapeDirectCounterLayoutPreview() {
     LandscapeDirectCounterLayout(
-        savedAudiences = listOf("12/09/2024 14:35" to 100, "11/09/2024 15:10" to 80),
+        savedAudiences = listOf(AudienceRecord(1_726_151_700_000, 100)),
         audience = 5,
         showDialog = false,
         isSaving = false,
