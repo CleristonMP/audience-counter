@@ -14,7 +14,7 @@ As correções serão entregues em fases pequenas e verificáveis. Cada bug corr
 | --- | --- | --- |
 | 0 | Rede de segurança e testes de caracterização | Em andamento |
 | 1 | Persistência resiliente | Concluída |
-| 2 | Salvamento assíncrono confiável | Pendente |
+| 2 | Salvamento assíncrono confiável | Concluída |
 | 3 | ViewModel e estado único | Pendente |
 | 4 | Restauração de estado | Pendente |
 | 5 | Tipagem e validação | Pendente |
@@ -88,6 +88,10 @@ Evitar perda de contagem, cliques concorrentes e falhas silenciosas durante grav
 - Falhas não apagam dados da tela.
 - Cliques rápidos não iniciam operações duplicadas.
 - O timestamp representa o momento efetivo do salvamento.
+
+### Decisão técnica
+
+Até a introdução do ViewModel na Fase 3, `AudienceCounterWithTabs` coordena uma única operação de persistência por vez e apresenta erros por `Snackbar`. O DataStore expõe operações atômicas de adição e limpeza; a UI deixa de montar e sobrescrever a lista completa. A contagem só é zerada pelo callback de sucesso da gravação.
 
 ## Fase 3 — Introduzir ViewModel e estado único
 

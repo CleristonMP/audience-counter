@@ -10,11 +10,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.lifecycleScope
 import com.cmp.audiencecounter.datastore.AudienceCounterDataStore
 import com.cmp.audiencecounter.ui.layouts.AudienceCounterWithTabs
 import com.cmp.audiencecounter.ui.theme.AudienceCounterTheme
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -41,12 +39,8 @@ class MainActivity : ComponentActivity() {
                     AudienceCounterWithTabs(
                         modifier = Modifier.padding(innerPadding),
                         savedAudiences = savedAudiences,
-                        onSaveAudiences = { audiences ->
-                            // Salva as contagens no DataStore
-                            lifecycleScope.launch {
-                                dataStore.saveAudiences(audiences)
-                            }
-                        }
+                        onAddAudience = dataStore::addAudience,
+                        onClearAudiences = dataStore::clearAudiences
                     )
                 }
             }

@@ -1,11 +1,13 @@
 package com.cmp.audiencecounter.layouts
 
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.cmp.audiencecounter.ui.layouts.AudienceCounterWithTabs
 import org.junit.Rule
 import org.junit.Test
+import java.io.IOException
 
 class AudienceCounterWithTabsTest {
 
@@ -17,7 +19,8 @@ class AudienceCounterWithTabsTest {
         composeTestRule.setContent {
             AudienceCounterWithTabs(
                 savedAudiences = emptyList(),
-                onSaveAudiences = {}
+                onAddAudience = {},
+                onClearAudiences = {}
             )
         }
 
@@ -31,7 +34,8 @@ class AudienceCounterWithTabsTest {
         composeTestRule.setContent {
             AudienceCounterWithTabs(
                 savedAudiences = emptyList(),
-                onSaveAudiences = {}
+                onAddAudience = {},
+                onClearAudiences = {}
             )
         }
 
@@ -43,5 +47,65 @@ class AudienceCounterWithTabsTest {
 
         // Verificar o conteúdo específico da aba "Contagem por Fileira"
         composeTestRule.onNodeWithText("Iniciar Nova Contagem").assertExists()  // Conteúdo da aba de fileiras
+    }
+
+    @Test
+    fun successfulSaveResetsCounterOnlyAfterPersistenceCompletes() {
+        var savedCount: Int? = null
+        composeTestRule.setContent {
+            AudienceCounterWithTabs(
+                savedAudiences = emptyList(),
+                onAddAudience = { count -> savedCount = count },
+                onClearAudiences = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("+").performClick()
+        composeTestRule.onNodeWithText("Salvar").performClick()
+        composeTestRule.waitForIdle()
+
+        assert(savedCount == 1)
+        composeTestRule.onNodeWithText("0").assertExists()
+    }
+
+    @Test
+    fun failedSavePreservesCounterAndAllowsRetry() {
+        composeTestRule.setContent {
+            AudienceCounterWithTabs(
+                savedAudiences = emptyList(),
+                onAddAudience = { throw IOException("Write failed") },
+                onClearAudiences = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("+").performClick()
+        composeTestRule.onNodeWithText("Salvar").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("1").assertExists()
+        composeTestRule.onNodeWithText("Salvar").assertIsEnabled()
+        composeTestRule
+            .onNodeWithText("Não foi possível concluir a operação. Tente novamente.")
+            .assertExists()
+    }
+
+    @Test
+    fun failedClearKeepsHistoryAndShowsError() {
+        composeTestRule.setContent {
+            AudienceCounterWithTabs(
+                savedAudiences = listOf("24/08/2026 10:15" to 25),
+                onAddAudience = {},
+                onClearAudiences = { throw IOException("Write failed") }
+            )
+        }
+
+        composeTestRule.onNodeWithText("Limpar contagens").performClick()
+        composeTestRule.onNodeWithText("Limpar registros").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("24/08/2026 10:15 - 25 pessoas").assertExists()
+        composeTestRule
+            .onNodeWithText("Não foi possível concluir a operação. Tente novamente.")
+            .assertExists()
     }
 }

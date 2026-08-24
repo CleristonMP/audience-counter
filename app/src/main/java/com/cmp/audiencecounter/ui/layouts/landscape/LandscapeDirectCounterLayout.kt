@@ -32,15 +32,14 @@ import com.cmp.audiencecounter.ui.components.SavedAudiencesDisplay
 @Composable
 fun LandscapeDirectCounterLayout(
     savedAudiences: List<Pair<String, Int>>,
-    onSaveAudiences: (List<Pair<String, Int>>) -> Unit,
     audience: Int,
     showDialog: Boolean,
     isSaving: Boolean,
-    formattedDateTime: String,
     onResetCounting: () -> Unit,
     onDecrement: () -> Unit,
     onIncrement: () -> Unit,
-    onSaving: (Boolean) -> Unit,
+    onSave: () -> Unit,
+    onClearAudiences: () -> Unit,
     onShowingDialog: (Boolean) -> Unit
 ) {
     Column(
@@ -63,7 +62,7 @@ fun LandscapeDirectCounterLayout(
                 )
 
                 ClearButton(
-                    isEnabled = savedAudiences.isNotEmpty(),
+                    isEnabled = savedAudiences.isNotEmpty() && !isSaving,
                     onClick = { onShowingDialog(true) },
                     modifier = Modifier.align(Alignment.End)
                 )
@@ -72,7 +71,7 @@ fun LandscapeDirectCounterLayout(
                     showDialog = showDialog,
                     onDismiss = { onShowingDialog(false) },
                     onConfirm = {
-                        onSaveAudiences(emptyList())
+                        onClearAudiences()
                         onShowingDialog(false)
                     },
                     title = stringResource(R.string.confirmation_dialog_title),
@@ -91,18 +90,7 @@ fun LandscapeDirectCounterLayout(
                     ResetButton(onClick = onResetCounting)
 
                     SaveButton(
-                        onClick = {
-                            if (!isSaving) {
-                                onSaving(true) // Impede que múltiplos cliques sejam registrados
-                                val updatedList = savedAudiences.toMutableList().apply {
-                                    add(0, formattedDateTime to audience)
-                                    if (size > 100) removeAt(lastIndex)
-                                }
-                                onSaveAudiences(updatedList)
-                                onResetCounting()
-                                onSaving(false)
-                            }
-                        },
+                        onClick = onSave,
                         isSaving = isSaving,
                         audience = audience
                     )
@@ -156,15 +144,14 @@ fun LandscapeDirectCounterLayout(
 fun LandscapeDirectCounterLayoutPreview() {
     LandscapeDirectCounterLayout(
         savedAudiences = listOf("12/09/2024 14:35" to 100, "11/09/2024 15:10" to 80),
-        onSaveAudiences = {},
         audience = 5,
         showDialog = false,
         isSaving = false,
-        formattedDateTime = "",
         onResetCounting = {},
         onDecrement = {},
         onIncrement = {},
-        onSaving = {},
+        onSave = {},
+        onClearAudiences = {},
         onShowingDialog = {},
     )
 }

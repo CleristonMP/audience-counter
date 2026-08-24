@@ -5,6 +5,9 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
@@ -30,45 +33,66 @@ class AudienceCounterDataStoreTest {
     @Before
     fun setUp() = runBlocking {
         context = RuntimeEnvironment.getApplication()
-        dataStore = AudienceCounterDataStore(context)
-        dataStore.saveAudiences(emptyList())
+        dataStore = AudienceCounterDataStore(context) { "24/08/2026 10:15" }
+        dataStore.clearAudiences()
     }
 
     @After
     fun tearDown() = runBlocking {
-        dataStore.saveAudiences(emptyList())
+        dataStore.clearAudiences()
     }
 
     @Test
-    fun saveAudiencesPersistsRecordsInTheSameOrder() = runBlocking {
-        val audiences = listOf(
-            "24/08/2026 10:15" to 25,
-            "24/08/2026 09:30" to 18
+    fun addAudiencePrependsNewRecords() = runBlocking {
+        dataStore.addAudience(25)
+        dataStore.addAudience(18)
+
+        assertEquals(
+            listOf("24/08/2026 10:15" to 18, "24/08/2026 10:15" to 25),
+            dataStore.audiencesFlow.first()
         )
-
-        dataStore.saveAudiences(audiences)
-
-        assertEquals(audiences, dataStore.audiencesFlow.first())
     }
 
     @Test
-    fun saveAudiencesKeepsOnlyTheFirstOneHundredRecords() = runBlocking {
-        val audiences = (1..105).map { index ->
-            "24/08/2026 10:${index.toString().padStart(2, '0')}" to index
+    fun addAudienceKeepsOnlyTheNewestOneHundredRecords() = runBlocking {
+        (1..105).forEach { count ->
+            dataStore.addAudience(count)
         }
 
-        dataStore.saveAudiences(audiences)
-
-        assertEquals(audiences.take(100), dataStore.audiencesFlow.first())
+        assertEquals((105 downTo 6).toList(), dataStore.audiencesFlow.first().map { it.second })
     }
 
     @Test
-    fun saveAudiencesWithEmptyListClearsExistingRecords() = runBlocking {
-        dataStore.saveAudiences(listOf("24/08/2026 10:15" to 25))
+    fun clearAudiencesRemovesExistingRecords() = runBlocking {
+        dataStore.addAudience(25)
 
-        dataStore.saveAudiences(emptyList())
+        dataStore.clearAudiences()
 
         assertEquals(emptyList<Pair<String, Int>>(), dataStore.audiencesFlow.first())
+    }
+
+    @Test
+    fun addAudienceGeneratesTimestampInsideTheSaveOperation() = runBlocking {
+        var currentTimestamp = "before-save"
+        val timestampedDataStore = AudienceCounterDataStore(context) { currentTimestamp }
+        currentTimestamp = "save-time"
+
+        timestampedDataStore.addAudience(25)
+
+        assertEquals(listOf("save-time" to 25), timestampedDataStore.audiencesFlow.first())
+    }
+
+    @Test
+    fun concurrentAddsDoNotOverwriteEachOther() = runBlocking {
+        coroutineScope {
+            (1..50).map { count ->
+                async { dataStore.addAudience(count) }
+            }.awaitAll()
+        }
+
+        val storedCounts = dataStore.audiencesFlow.first().map { it.second }
+        assertEquals(50, storedCounts.size)
+        assertEquals((1..50).toSet(), storedCounts.toSet())
     }
 
     @Test

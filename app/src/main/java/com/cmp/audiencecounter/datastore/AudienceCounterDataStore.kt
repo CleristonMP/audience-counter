@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.cmp.audiencecounter.utils.getCurrentFormattedDate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -13,12 +14,26 @@ import java.io.IOException
 
 val Context.dataStore by preferencesDataStore(name = "audience_counter")
 
-class AudienceCounterDataStore(private val context: Context) {
+class AudienceCounterDataStore(
+    private val context: Context,
+    private val currentDateProvider: () -> String = ::getCurrentFormattedDate
+) {
     private val audienceKey = stringPreferencesKey("saved_audiences")
 
-    suspend fun saveAudiences(audiences: List<Pair<String, Int>>) {
+    suspend fun addAudience(count: Int) {
         context.dataStore.edit { preferences ->
-            preferences[audienceKey] = AudienceSerialization.encode(audiences.take(MAX_SAVED_AUDIENCES))
+            val savedAudiences = AudienceSerialization.decode(preferences[audienceKey].orEmpty())
+            val updatedAudiences = listOf(currentDateProvider() to count) + savedAudiences
+
+            preferences[audienceKey] = AudienceSerialization.encode(
+                updatedAudiences.take(MAX_SAVED_AUDIENCES)
+            )
+        }
+    }
+
+    suspend fun clearAudiences() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(audienceKey)
         }
     }
 

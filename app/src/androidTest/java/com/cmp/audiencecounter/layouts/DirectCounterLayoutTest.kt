@@ -17,12 +17,14 @@ class DirectCounterLayoutTest {
         composeTestRule.setContent {
             DirectCounterLayout(
                 savedAudiences = emptyList(),
-                onSaveAudiences = {}
+                isPersisting = false,
+                onAddAudience = { _, onSuccess -> onSuccess() },
+                onClearAudiences = {}
             )
         }
 
-        // Verifica se o título da contagem direta é exibido
-        composeTestRule.onNodeWithText("Contador de Assistência").assertExists()
+        // Verifica se o contador começa zerado
+        composeTestRule.onNodeWithText("0").assertExists()
 
         // Verifica se o botão "Salvar" é exibido
         composeTestRule.onNodeWithText("Salvar").assertExists()
@@ -37,11 +39,16 @@ class DirectCounterLayoutTest {
         composeTestRule.setContent {
             DirectCounterLayout(
                 savedAudiences = emptyList(),
-                onSaveAudiences = { saved = true }
+                isPersisting = false,
+                onAddAudience = { _, onSuccess ->
+                    saved = true
+                    onSuccess()
+                },
+                onClearAudiences = {}
             )
         }
 
-        // Simula o clique no botão "Salvar"
+        composeTestRule.onNodeWithText("+").performClick()
         composeTestRule.onNodeWithText("Salvar").performClick()
 
         // Verifica se a função de salvar foi chamada

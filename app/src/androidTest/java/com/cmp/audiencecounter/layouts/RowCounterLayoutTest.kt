@@ -18,7 +18,9 @@ class RowCounterLayoutTest {
         composeTestRule.setContent {
             RowCounterLayout(
                 savedAudiences = emptyList(),
-                onSaveTotal = {}
+                isPersisting = false,
+                onAddAudience = { _, onSuccess -> onSuccess() },
+                onClearAudiences = {}
             )
         }
 
@@ -37,7 +39,9 @@ class RowCounterLayoutTest {
         composeTestRule.setContent {
             RowCounterLayout(
                 savedAudiences = emptyList(),
-                onSaveTotal = {}
+                isPersisting = false,
+                onAddAudience = { _, onSuccess -> onSuccess() },
+                onClearAudiences = {}
             )
         }
 
@@ -56,7 +60,9 @@ class RowCounterLayoutTest {
         composeTestRule.setContent {
             RowCounterLayout(
                 savedAudiences = emptyList(),
-                onSaveTotal = {}
+                isPersisting = false,
+                onAddAudience = { _, onSuccess -> onSuccess() },
+                onClearAudiences = {}
             )
         }
 

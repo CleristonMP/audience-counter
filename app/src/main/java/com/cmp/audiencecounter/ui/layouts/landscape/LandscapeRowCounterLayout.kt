@@ -44,9 +44,10 @@ fun LandscapeRowCounterLayout(
     currentRow: Int,
     peopleInRow: Int,
     rowCounts: SnapshotStateList<Int>,
-    formattedDateTime: String,
     savedAudiences: List<Pair<String, Int>>,
-    onSaveTotal: (List<Pair<String, Int>>) -> Unit,
+    isSaving: Boolean,
+    onSaveTotal: () -> Unit,
+    onClearAudiences: () -> Unit,
     onChangeRowCount: (Int) -> Unit,
     onChangeCurrentRow: (Int) -> Unit,
     onChangePeopleInRow: (Int) -> Unit,
@@ -74,7 +75,7 @@ fun LandscapeRowCounterLayout(
                 )
 
                 ClearButton(
-                    isEnabled = savedAudiences.isNotEmpty(),
+                    isEnabled = savedAudiences.isNotEmpty() && !isSaving,
                     onClick = { onShowingDialog(true) },
                     modifier = Modifier.align(Alignment.End)
                 )
@@ -83,7 +84,7 @@ fun LandscapeRowCounterLayout(
                     showDialog = showDialog,
                     onDismiss = { onShowingDialog(false) },
                     onConfirm = {
-                        onSaveTotal(emptyList())
+                        onClearAudiences()
                         onShowingDialog(false)
                     },
                     title = stringResource(R.string.confirmation_dialog_title),
@@ -94,6 +95,7 @@ fun LandscapeRowCounterLayout(
 
                 // Botão para iniciar uma nova contagem
                 Button(
+                    enabled = !isSaving,
                     onClick = {
                         onCounting(true)
                         onChangeRowCount(0)
@@ -237,17 +239,8 @@ fun LandscapeRowCounterLayout(
                     Spacer(modifier = Modifier.height(16.dp))
                     // Botão para salvar o total quando todas as fileiras forem contadas
                     Button(
-                        onClick = {
-                            val updatedList = savedAudiences.toMutableList().apply {
-                                add(0, formattedDateTime to rowCounts.sum())
-                                if (size > 100) removeAt(lastIndex)
-                            }
-                            onSaveTotal(updatedList)
-                            rowCounts.clear()
-                            onChangeRowCount(0)
-                            onCounting(false)
-                        },
-                        enabled = (rowCount < currentRow) // Só habilita ao final da contagem de todas as fileiras
+                        onClick = onSaveTotal,
+                        enabled = rowCount < currentRow && !isSaving
                     ) {
                         Text(stringResource(R.string.save_total))
                     }
@@ -277,9 +270,10 @@ fun LandscapeRowCounterLayoutPreview() {
         currentRow = 6,
         peopleInRow = 0,
         rowCounts = rowCounts,
-        formattedDateTime = "",
         savedAudiences = listOf("12/09/2024 14:35" to 100, "11/09/2024 15:10" to 80),
+        isSaving = false,
         onSaveTotal = {},
+        onClearAudiences = {},
         onChangeRowCount = {},
         onChangeCurrentRow = {},
         onChangePeopleInRow = {},
