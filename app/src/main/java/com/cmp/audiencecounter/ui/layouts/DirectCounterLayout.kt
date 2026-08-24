@@ -17,33 +17,29 @@ fun DirectCounterLayout(
     onAction: (AudienceCounterAction) -> Unit
 ) {
     var showDialog by rememberSaveable { mutableStateOf(false) }
+    val layoutState = uiState.toDirectLayoutState()
+    val events = DirectCounterEvents(
+        onReset = { onAction(AudienceCounterAction.ResetDirectCount) },
+        onDecrement = { onAction(AudienceCounterAction.DecrementDirectCount) },
+        onIncrement = { onAction(AudienceCounterAction.IncrementDirectCount) },
+        onSave = { onAction(AudienceCounterAction.SaveDirectCount) },
+        onClearHistory = { onAction(AudienceCounterAction.ClearHistory) }
+    )
 
     BoxWithConstraints {
         if (maxWidth > maxHeight) {
             LandscapeDirectCounterLayout(
-                savedAudiences = uiState.savedAudiences,
-                audience = uiState.directCount,
-                showDialog = showDialog,
-                isSaving = uiState.isSaving,
-                onResetCounting = { onAction(AudienceCounterAction.ResetDirectCount) },
-                onDecrement = { onAction(AudienceCounterAction.DecrementDirectCount) },
-                onIncrement = { onAction(AudienceCounterAction.IncrementDirectCount) },
-                onSave = { onAction(AudienceCounterAction.SaveDirectCount) },
-                onClearAudiences = { onAction(AudienceCounterAction.ClearHistory) },
-                onShowingDialog = { value -> showDialog = value }
+                state = layoutState,
+                events = events,
+                showClearConfirmation = showDialog,
+                onClearConfirmationChange = { showDialog = it }
             )
         } else {
             PortraitDirectCounterLayout(
-                savedAudiences = uiState.savedAudiences,
-                audience = uiState.directCount,
-                showDialog = showDialog,
-                isSaving = uiState.isSaving,
-                onResetCounting = { onAction(AudienceCounterAction.ResetDirectCount) },
-                onDecrement = { onAction(AudienceCounterAction.DecrementDirectCount) },
-                onIncrement = { onAction(AudienceCounterAction.IncrementDirectCount) },
-                onSave = { onAction(AudienceCounterAction.SaveDirectCount) },
-                onClearAudiences = { onAction(AudienceCounterAction.ClearHistory) },
-                onShowingDialog = { value -> showDialog = value }
+                state = layoutState,
+                events = events,
+                showClearConfirmation = showDialog,
+                onClearConfirmationChange = { showDialog = it }
             )
         }
     }

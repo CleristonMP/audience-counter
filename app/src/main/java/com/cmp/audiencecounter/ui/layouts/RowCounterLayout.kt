@@ -17,63 +17,32 @@ fun RowCounterLayout(
     onAction: (AudienceCounterAction) -> Unit
 ) {
     var showDialog by rememberSaveable { mutableStateOf(false) }
+    val layoutState = uiState.toRowLayoutState()
+    val events = RowCounterEvents(
+        onSaveTotal = { onAction(AudienceCounterAction.SaveRowTotal) },
+        onClearHistory = { onAction(AudienceCounterAction.ClearHistory) },
+        onStart = { onAction(AudienceCounterAction.StartRowCount) },
+        onChangeRowCount = { onAction(AudienceCounterAction.ChangeRowCount(it)) },
+        onCompleteCurrentRow = { onAction(AudienceCounterAction.CompleteCurrentRow) },
+        onResetCurrentRow = { onAction(AudienceCounterAction.ResetCurrentRow) },
+        onDecrementCurrentRow = { onAction(AudienceCounterAction.DecrementCurrentRow) },
+        onIncrementCurrentRow = { onAction(AudienceCounterAction.IncrementCurrentRow) }
+    )
 
     BoxWithConstraints {
         if (maxWidth > maxHeight) {
             LandscapeRowCounterLayout(
-                showDialog = showDialog,
-                isCounting = uiState.isCountingRows,
-                rowCount = uiState.rowCount,
-                currentRow = uiState.currentRow,
-                peopleInRow = uiState.peopleInCurrentRow,
-                rowCounts = uiState.completedRowCounts,
-                savedAudiences = uiState.savedAudiences,
-                isSaving = uiState.isSaving,
-                onSaveTotal = { onAction(AudienceCounterAction.SaveRowTotal) },
-                onClearAudiences = { onAction(AudienceCounterAction.ClearHistory) },
-                onStartCounting = { onAction(AudienceCounterAction.StartRowCount) },
-                onChangeRowCount = {
-                    onAction(AudienceCounterAction.ChangeRowCount(it))
-                },
-                onCompleteCurrentRow = {
-                    onAction(AudienceCounterAction.CompleteCurrentRow)
-                },
-                onResetCurrentRow = { onAction(AudienceCounterAction.ResetCurrentRow) },
-                onDecrementCurrentRow = {
-                    onAction(AudienceCounterAction.DecrementCurrentRow)
-                },
-                onIncrementCurrentRow = {
-                    onAction(AudienceCounterAction.IncrementCurrentRow)
-                },
-                onShowingDialog = { showDialog = it }
+                state = layoutState,
+                events = events,
+                showClearConfirmation = showDialog,
+                onClearConfirmationChange = { showDialog = it }
             )
         } else {
             PortraitRowCounterLayout(
-                showDialog = showDialog,
-                isCounting = uiState.isCountingRows,
-                rowCount = uiState.rowCount,
-                currentRow = uiState.currentRow,
-                peopleInRow = uiState.peopleInCurrentRow,
-                rowCounts = uiState.completedRowCounts,
-                savedAudiences = uiState.savedAudiences,
-                isSaving = uiState.isSaving,
-                onSaveTotal = { onAction(AudienceCounterAction.SaveRowTotal) },
-                onClearAudiences = { onAction(AudienceCounterAction.ClearHistory) },
-                onStartCounting = { onAction(AudienceCounterAction.StartRowCount) },
-                onChangeRowCount = {
-                    onAction(AudienceCounterAction.ChangeRowCount(it))
-                },
-                onCompleteCurrentRow = {
-                    onAction(AudienceCounterAction.CompleteCurrentRow)
-                },
-                onResetCurrentRow = { onAction(AudienceCounterAction.ResetCurrentRow) },
-                onDecrementCurrentRow = {
-                    onAction(AudienceCounterAction.DecrementCurrentRow)
-                },
-                onIncrementCurrentRow = {
-                    onAction(AudienceCounterAction.IncrementCurrentRow)
-                },
-                onShowingDialog = { showDialog = it }
+                state = layoutState,
+                events = events,
+                showClearConfirmation = showDialog,
+                onClearConfirmationChange = { showDialog = it }
             )
         }
     }

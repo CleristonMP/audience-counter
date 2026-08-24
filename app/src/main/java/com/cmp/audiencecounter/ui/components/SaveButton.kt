@@ -18,7 +18,7 @@ fun SaveButton(
 ) {
     Button(
         onClick = onClick,
-        enabled = !isSaving && audience > 0, // Desativa o botão enquanto está salvando
+        enabled = !isSaving && audience > 0,
         shape = RoundedCornerShape(8.dp),
         modifier = Modifier
             .padding(horizontal = 16.dp)

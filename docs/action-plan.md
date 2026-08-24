@@ -19,7 +19,7 @@ As correções serão entregues em fases pequenas e verificáveis. Cada bug corr
 | 4 | Restauração de estado | Concluída |
 | 5 | Tipagem e validação | Concluída |
 | 6 | Correção da contagem por fileiras | Concluída |
-| 7 | Legibilidade e redução de duplicação | Pendente |
+| 7 | Legibilidade e redução de duplicação | Concluída |
 | 8 | Validação final | Pendente |
 
 ## Fase 0 — Criar uma rede de segurança
@@ -207,6 +207,10 @@ Evitar regras duplicadas entre portrait e landscape e tornar as APIs dos compone
 - Regras de negócio não aparecem nos layouts de orientação.
 - Componentes recebem modelos imutáveis e eventos explícitos.
 - Correções compartilhadas não precisam ser repetidas.
+
+### Decisão técnica
+
+Os layouts portrait e landscape passam a receber modelos imutáveis específicos e conjuntos de eventos explícitos. Histórico e confirmação de limpeza, controles de ajuste, ações de salvamento, configuração de fileiras, progresso atual e resumo final são componentes compartilhados; os layouts de orientação mantêm somente posicionamento e visibilidade das seções. Condições derivadas ficam em `RowCounterLayoutState`, cores semânticas ficam no tema e os previews usam listas imutáveis sem mutação durante a composição.
 
 ## Fase 8 — Ampliar testes e realizar validação final
 

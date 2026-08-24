@@ -19,11 +19,10 @@ fun RowCountDisplay(rowCounts: List<Int>) {
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Display de contagem de cada fileira individual
         if (rowCounts.isNotEmpty()) {
             Text(stringResource(R.string.counts_by_row_text))
             LazyColumn(
-                modifier = Modifier.height(56.dp) // Define a altura fixa da caixa
+                modifier = Modifier.height(56.dp)
             ) {
                 itemsIndexed(rowCounts) { index, count ->
                     Text(
