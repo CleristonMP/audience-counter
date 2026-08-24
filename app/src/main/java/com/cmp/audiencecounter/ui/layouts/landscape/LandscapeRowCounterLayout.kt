@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,16 +42,18 @@ fun LandscapeRowCounterLayout(
     rowCount: Int,
     currentRow: Int,
     peopleInRow: Int,
-    rowCounts: SnapshotStateList<Int>,
+    rowCounts: List<Int>,
     savedAudiences: List<Pair<String, Int>>,
     isSaving: Boolean,
     onSaveTotal: () -> Unit,
     onClearAudiences: () -> Unit,
+    onStartCounting: () -> Unit,
     onChangeRowCount: (Int) -> Unit,
-    onChangeCurrentRow: (Int) -> Unit,
-    onChangePeopleInRow: (Int) -> Unit,
+    onCompleteCurrentRow: () -> Unit,
+    onResetCurrentRow: () -> Unit,
+    onDecrementCurrentRow: () -> Unit,
+    onIncrementCurrentRow: () -> Unit,
     onShowingDialog: (Boolean) -> Unit,
-    onCounting: (Boolean) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -96,13 +97,7 @@ fun LandscapeRowCounterLayout(
                 // Botão para iniciar uma nova contagem
                 Button(
                     enabled = !isSaving,
-                    onClick = {
-                        onCounting(true)
-                        onChangeRowCount(0)
-                        onChangeCurrentRow(1)
-                        onChangePeopleInRow(0)
-                        rowCounts.clear()
-                    },
+                    onClick = onStartCounting,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
                     Text(stringResource(R.string.start_new_count))
@@ -122,8 +117,6 @@ fun LandscapeRowCounterLayout(
                         value = if (rowCount == 0) "" else rowCount.toString(),
                         onValueChange = { input ->
                             onChangeRowCount(input.toIntOrNull() ?: 0)
-                            onChangeCurrentRow(1)
-                            rowCounts.clear()
                         },
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
@@ -148,12 +141,7 @@ fun LandscapeRowCounterLayout(
                         NextRowButton(
                             currentRow = currentRow,
                             rowCount = rowCount,
-                            onClick = {
-                                if (currentRow >= rowCount) onCounting(false)
-                                rowCounts.add(peopleInRow) // Adiciona a contagem da fileira à memória
-                                onChangePeopleInRow(0) // Reseta a contagem da próxima fileira
-                                onChangeCurrentRow(currentRow + 1) // Vai para a próxima fileira
-                            }
+                            onClick = onCompleteCurrentRow
                         )
                     }
                 }
@@ -177,7 +165,7 @@ fun LandscapeRowCounterLayout(
                         ) {
                             // Botão para zerar o contador
                             ResetButton(
-                                onClick = { onChangePeopleInRow(0) },
+                                onClick = onResetCurrentRow,
                             )
                         }
 
@@ -190,7 +178,7 @@ fun LandscapeRowCounterLayout(
                         ) {
                             CounterButton(
                                 text = "-",
-                                onClick = { if (peopleInRow > 0) onChangePeopleInRow(peopleInRow - 1) },
+                                onClick = onDecrementCurrentRow,
                                 backgroundColor = Color(237 / 255f, 130 / 255f, 86 / 255f),
                                 containerColor = Color(237 / 255f, 130 / 255f, 86 / 255f),
                                 modifier = Modifier.align(Alignment.Bottom),
@@ -204,7 +192,7 @@ fun LandscapeRowCounterLayout(
 
                             CounterButton(
                                 text = "+",
-                                onClick = { onChangePeopleInRow(peopleInRow + 1) },
+                                onClick = onIncrementCurrentRow,
                                 backgroundColor = Color(73 / 255f, 116 / 255f, 145 / 255f),
                                 containerColor = Color(73 / 255f, 116 / 255f, 145 / 255f),
                                 size = 98.dp,
@@ -274,10 +262,12 @@ fun LandscapeRowCounterLayoutPreview() {
         isSaving = false,
         onSaveTotal = {},
         onClearAudiences = {},
+        onStartCounting = {},
         onChangeRowCount = {},
-        onChangeCurrentRow = {},
-        onChangePeopleInRow = {},
+        onCompleteCurrentRow = {},
+        onResetCurrentRow = {},
+        onDecrementCurrentRow = {},
+        onIncrementCurrentRow = {},
         onShowingDialog = {},
-        onCounting = {}
     )
 }

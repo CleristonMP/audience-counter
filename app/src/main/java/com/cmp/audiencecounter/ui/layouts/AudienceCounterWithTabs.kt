@@ -9,12 +9,8 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -23,19 +19,16 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.cmp.audiencecounter.R
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.launch
+import com.cmp.audiencecounter.presentation.AudienceCounterAction
+import com.cmp.audiencecounter.presentation.AudienceCounterError
+import com.cmp.audiencecounter.presentation.AudienceCounterUiState
 
 @Composable
 fun AudienceCounterWithTabs(
     modifier: Modifier = Modifier,
-    savedAudiences: List<Pair<String, Int>>,
-    onAddAudience: suspend (Int) -> Unit,
-    onClearAudiences: suspend () -> Unit
+    uiState: AudienceCounterUiState,
+    onAction: (AudienceCounterAction) -> Unit
 ) {
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
-    var isPersisting by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val persistenceErrorMessage = stringResource(R.string.persistence_error_message)
 
@@ -44,46 +37,27 @@ fun AudienceCounterWithTabs(
         stringResource(R.string.row_count_tab_title)
     )
 
-    fun launchPersistence(
-        onSuccess: () -> Unit = {},
-        operation: suspend () -> Unit
-    ) {
-        if (isPersisting) return
-
-        isPersisting = true
-        coroutineScope.launch {
-            var persistenceFailed = false
-            try {
-                operation()
-                onSuccess()
-            } catch (cancellationException: CancellationException) {
-                throw cancellationException
-            } catch (_: Exception) {
-                persistenceFailed = true
-            } finally {
-                isPersisting = false
-            }
-
-            if (persistenceFailed) {
-                snackbarHostState.showSnackbar(persistenceErrorMessage)
-            }
+    LaunchedEffect(uiState.error) {
+        if (uiState.error == AudienceCounterError.PERSISTENCE) {
+            snackbarHostState.showSnackbar(persistenceErrorMessage)
+            onAction(AudienceCounterAction.DismissError)
         }
     }
 
     Box(modifier = modifier) {
         Column {
             PrimaryTabRow(
-                selectedTabIndex = selectedTabIndex,
+                selectedTabIndex = uiState.selectedTabIndex,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 tabs.forEachIndexed { index, tab ->
                     Tab(
-                        selected = selectedTabIndex == index,
-                        onClick = { selectedTabIndex = index },
+                        selected = uiState.selectedTabIndex == index,
+                        onClick = { onAction(AudienceCounterAction.SelectTab(index)) },
                         text = {
                             Text(
                                 text = tab,
-                                fontWeight = if (selectedTabIndex == index) {
+                                fontWeight = if (uiState.selectedTabIndex == index) {
                                     FontWeight.Bold
                                 } else {
                                     FontWeight.Normal
@@ -95,23 +69,15 @@ fun AudienceCounterWithTabs(
                 }
             }
 
-            when (selectedTabIndex) {
+            when (uiState.selectedTabIndex) {
                 0 -> DirectCounterLayout(
-                    savedAudiences = savedAudiences,
-                    isPersisting = isPersisting,
-                    onAddAudience = { count, onSuccess ->
-                        launchPersistence(onSuccess) { onAddAudience(count) }
-                    },
-                    onClearAudiences = { launchPersistence(operation = onClearAudiences) }
+                    uiState = uiState,
+                    onAction = onAction
                 )
 
                 1 -> RowCounterLayout(
-                    savedAudiences = savedAudiences,
-                    isPersisting = isPersisting,
-                    onAddAudience = { count, onSuccess ->
-                        launchPersistence(onSuccess) { onAddAudience(count) }
-                    },
-                    onClearAudiences = { launchPersistence(operation = onClearAudiences) }
+                    uiState = uiState,
+                    onAction = onAction
                 )
             }
         }
@@ -127,9 +93,10 @@ fun AudienceCounterWithTabs(
 @Composable
 fun AudienceCounterWithTabsPreview() {
     AudienceCounterWithTabs(
-        savedAudiences = listOf("12/09/2024 14:35" to 100, "11/09/2024 15:10" to 80),
-        onAddAudience = {},
-        onClearAudiences = {}
+        uiState = AudienceCounterUiState(
+            savedAudiences = listOf("12/09/2024 14:35" to 100, "11/09/2024 15:10" to 80)
+        ),
+        onAction = {}
     )
 }
 
@@ -137,9 +104,10 @@ fun AudienceCounterWithTabsPreview() {
 @Composable
 fun AudienceCounterWithTabsPreviewLandscape() {
     AudienceCounterWithTabs(
-        savedAudiences = listOf("12/09/2024 14:35" to 100, "11/09/2024 15:10" to 80),
-        onAddAudience = {},
-        onClearAudiences = {}
+        uiState = AudienceCounterUiState(
+            savedAudiences = listOf("12/09/2024 14:35" to 100, "11/09/2024 15:10" to 80)
+        ),
+        onAction = {}
     )
 }
 

@@ -15,7 +15,7 @@ As correções serão entregues em fases pequenas e verificáveis. Cada bug corr
 | 0 | Rede de segurança e testes de caracterização | Em andamento |
 | 1 | Persistência resiliente | Concluída |
 | 2 | Salvamento assíncrono confiável | Concluída |
-| 3 | ViewModel e estado único | Pendente |
+| 3 | ViewModel e estado único | Concluída |
 | 4 | Restauração de estado | Pendente |
 | 5 | Tipagem e validação | Pendente |
 | 6 | Correção da contagem por fileiras | Pendente |
@@ -113,6 +113,10 @@ Separar a apresentação das regras de negócio e da persistência.
 - A Activity apenas configura e apresenta a tela.
 - Composables não iniciam coroutines de persistência.
 - Regras de negócio podem ser testadas sem Compose.
+
+### Decisão técnica
+
+O fluxo passou a usar `AudienceRepository`, `AudienceCounterViewModel`, `AudienceCounterUiState` e eventos `AudienceCounterAction`. O ViewModel concentra contagem direta, progresso por fileiras, aba selecionada, histórico, carregamento e erros; gravações são executadas com `viewModelScope`. A UI coleta o `StateFlow` com `collectAsStateWithLifecycle()` e mantém localmente apenas estado estritamente visual, como a abertura dos diálogos de confirmação.
 
 ## Fase 4 — Preservar estado durante recriações
 

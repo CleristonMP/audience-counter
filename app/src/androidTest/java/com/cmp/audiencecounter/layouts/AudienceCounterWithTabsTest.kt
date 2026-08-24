@@ -1,111 +1,76 @@
 package com.cmp.audiencecounter.layouts
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.cmp.audiencecounter.presentation.AudienceCounterAction
+import com.cmp.audiencecounter.presentation.AudienceCounterError
+import com.cmp.audiencecounter.presentation.AudienceCounterUiState
 import com.cmp.audiencecounter.ui.layouts.AudienceCounterWithTabs
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
-import java.io.IOException
 
 class AudienceCounterWithTabsTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
     @Test
-    fun testTabsAreDisplayedCorrectly() {
+    fun tabsAreDisplayedCorrectly() {
         composeTestRule.setContent {
             AudienceCounterWithTabs(
-                savedAudiences = emptyList(),
-                onAddAudience = {},
-                onClearAudiences = {}
+                uiState = AudienceCounterUiState(),
+                onAction = {}
             )
         }
 
-        // Verificar se as abas estão sendo exibidas corretamente
         composeTestRule.onNodeWithText("Contagem Direta").assertExists()
         composeTestRule.onNodeWithText("Contagem por Fileira").assertExists()
     }
 
     @Test
-    fun testSwitchingTabs() {
+    fun selectingRowTabEmitsActionAndDisplaysRowContent() {
+        var uiState by mutableStateOf(AudienceCounterUiState())
         composeTestRule.setContent {
             AudienceCounterWithTabs(
-                savedAudiences = emptyList(),
-                onAddAudience = {},
-                onClearAudiences = {}
+                uiState = uiState,
+                onAction = { action ->
+                    if (action is AudienceCounterAction.SelectTab) {
+                        uiState = uiState.copy(selectedTabIndex = action.index)
+                    }
+                }
             )
         }
 
-        // Verificar o conteúdo da aba "Contagem Direta" inicialmente
-        composeTestRule.onNodeWithText("Contagem Direta").assertExists()
-
-        // Simular clique na aba "Contagem por Fileira"
         composeTestRule.onNodeWithText("Contagem por Fileira").performClick()
 
-        // Verificar o conteúdo específico da aba "Contagem por Fileira"
-        composeTestRule.onNodeWithText("Iniciar Nova Contagem").assertExists()  // Conteúdo da aba de fileiras
+        composeTestRule.onNodeWithText("Iniciar Nova Contagem").assertExists()
     }
 
     @Test
-    fun successfulSaveResetsCounterOnlyAfterPersistenceCompletes() {
-        var savedCount: Int? = null
+    fun persistenceErrorIsDisplayedAndDismissed() {
+        var uiState by mutableStateOf(
+            AudienceCounterUiState(error = AudienceCounterError.PERSISTENCE)
+        )
         composeTestRule.setContent {
             AudienceCounterWithTabs(
-                savedAudiences = emptyList(),
-                onAddAudience = { count -> savedCount = count },
-                onClearAudiences = {}
+                uiState = uiState,
+                onAction = { action ->
+                    if (action == AudienceCounterAction.DismissError) {
+                        uiState = uiState.copy(error = null)
+                    }
+                }
             )
         }
 
-        composeTestRule.onNodeWithText("+").performClick()
-        composeTestRule.onNodeWithText("Salvar").performClick()
-        composeTestRule.waitForIdle()
-
-        assert(savedCount == 1)
-        composeTestRule.onNodeWithText("0").assertExists()
-    }
-
-    @Test
-    fun failedSavePreservesCounterAndAllowsRetry() {
-        composeTestRule.setContent {
-            AudienceCounterWithTabs(
-                savedAudiences = emptyList(),
-                onAddAudience = { throw IOException("Write failed") },
-                onClearAudiences = {}
-            )
-        }
-
-        composeTestRule.onNodeWithText("+").performClick()
-        composeTestRule.onNodeWithText("Salvar").performClick()
-        composeTestRule.waitForIdle()
-
-        composeTestRule.onNodeWithText("1").assertExists()
-        composeTestRule.onNodeWithText("Salvar").assertIsEnabled()
         composeTestRule
             .onNodeWithText("Não foi possível concluir a operação. Tente novamente.")
             .assertExists()
-    }
+        composeTestRule.mainClock.advanceTimeBy(5_000)
 
-    @Test
-    fun failedClearKeepsHistoryAndShowsError() {
-        composeTestRule.setContent {
-            AudienceCounterWithTabs(
-                savedAudiences = listOf("24/08/2026 10:15" to 25),
-                onAddAudience = {},
-                onClearAudiences = { throw IOException("Write failed") }
-            )
-        }
-
-        composeTestRule.onNodeWithText("Limpar contagens").performClick()
-        composeTestRule.onNodeWithText("Limpar registros").performClick()
-        composeTestRule.waitForIdle()
-
-        composeTestRule.onNodeWithText("24/08/2026 10:15 - 25 pessoas").assertExists()
-        composeTestRule
-            .onNodeWithText("Não foi possível concluir a operação. Tente novamente.")
-            .assertExists()
+        assertEquals(null, uiState.error)
     }
 }
