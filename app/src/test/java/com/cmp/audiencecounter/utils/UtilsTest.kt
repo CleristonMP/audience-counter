@@ -6,24 +6,34 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 @Config(manifest = Config.NONE)
 class UtilsTest {
 
     @Test
-    fun testGetCurrentFormattedDate() {
-        val currentDate = getCurrentFormattedDateForTest()
-        val expectedDate = SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(Date())
+    fun getCurrentFormattedDateUsesExpectedFormat() {
+        val formattedDate = getCurrentFormattedDate()
 
-        assertTrue(currentDate == expectedDate)
+        assertTrue(formattedDate.matches(Regex("\\d{2}/\\d{2}/\\d{4} \\d{2}:\\d{2}")))
     }
-}
 
-fun getCurrentFormattedDateForTest(): String {
-    val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    val timeFormatter = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-    return formatter.format(Date()) + " " + timeFormatter.format(Date())
+    @Test
+    fun getCurrentFormattedDateRepresentsCurrentMinute() {
+        val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).apply {
+            isLenient = false
+        }
+        val beforeCall = System.currentTimeMillis()
+        val formattedDate = getCurrentFormattedDate()
+        val afterCall = System.currentTimeMillis()
+        val parsedDate = requireNotNull(formatter.parse(formattedDate))
+        val parsedMinute = TimeUnit.MILLISECONDS.toMinutes(parsedDate.time)
+
+        val firstPossibleMinute = TimeUnit.MILLISECONDS.toMinutes(beforeCall)
+        val lastPossibleMinute = TimeUnit.MILLISECONDS.toMinutes(afterCall)
+
+        assertTrue(parsedMinute in firstPossibleMinute..lastPossibleMinute)
+    }
 }
