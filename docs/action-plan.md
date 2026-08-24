@@ -16,7 +16,7 @@ As correções serão entregues em fases pequenas e verificáveis. Cada bug corr
 | 1 | Persistência resiliente | Concluída |
 | 2 | Salvamento assíncrono confiável | Concluída |
 | 3 | ViewModel e estado único | Concluída |
-| 4 | Restauração de estado | Pendente |
+| 4 | Restauração de estado | Concluída |
 | 5 | Tipagem e validação | Pendente |
 | 6 | Correção da contagem por fileiras | Pendente |
 | 7 | Legibilidade e redução de duplicação | Pendente |
@@ -135,6 +135,10 @@ Evitar perda da contagem ao girar a tela, alternar abas ou recriar a Activity.
 
 - Rotação e troca de abas preservam o progresso.
 - O comportamento após encerramento do processo está definido e testado.
+
+### Decisão técnica
+
+Contagem direta, aba selecionada, quantidade e posição das fileiras, pessoas na fileira atual e fileiras concluídas são mantidas no `SavedStateHandle`. Assim, o progresso sobrevive a mudanças de configuração e à recriação do processo enquanto a tarefa do aplicativo puder ser restaurada pelo Android. `isSaving` e erros permanecem transitórios. Uma sessão incompleta não é persistida como dado durável após remoção explícita da tarefa, limpeza de dados ou novo início independente; essa escolha evita misturar rascunhos com o histórico confirmado.
 
 ## Fase 5 — Melhorar tipagem e null safety
 

@@ -1,8 +1,11 @@
 package com.cmp.audiencecounter.presentation
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.CreationExtras
 import com.cmp.audiencecounter.repository.AudienceRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,15 +15,29 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class AudienceCounterViewModel(
-    private val repository: AudienceRepository
+    private val repository: AudienceRepository,
+    private val savedStateHandle: SavedStateHandle = SavedStateHandle()
 ) : ViewModel() {
-    private val mutableUiState = MutableStateFlow(AudienceCounterUiState())
+    private val mutableUiState = MutableStateFlow(
+        AudienceCounterUiState(
+            directCount = savedStateHandle[DIRECT_COUNT_KEY] ?: 0,
+            rowCount = savedStateHandle[ROW_COUNT_KEY] ?: 0,
+            currentRow = savedStateHandle[CURRENT_ROW_KEY] ?: 1,
+            peopleInCurrentRow = savedStateHandle[PEOPLE_IN_CURRENT_ROW_KEY] ?: 0,
+            completedRowCounts = savedStateHandle
+                .get<ArrayList<Int>>(COMPLETED_ROW_COUNTS_KEY)
+                ?.toList()
+                .orEmpty(),
+            selectedTabIndex = savedStateHandle[SELECTED_TAB_INDEX_KEY] ?: 0,
+            isCountingRows = savedStateHandle[IS_COUNTING_ROWS_KEY] ?: false
+        )
+    )
     val uiState: StateFlow<AudienceCounterUiState> = mutableUiState.asStateFlow()
 
     init {
         viewModelScope.launch {
             repository.audiences.collect { savedAudiences ->
-                mutableUiState.update { it.copy(savedAudiences = savedAudiences) }
+                updateState { it.copy(savedAudiences = savedAudiences) }
             }
         }
     }
@@ -45,11 +62,11 @@ class AudienceCounterViewModel(
     }
 
     private fun selectTab(index: Int) {
-        mutableUiState.update { it.copy(selectedTabIndex = index) }
+        updateState { it.copy(selectedTabIndex = index) }
     }
 
     private fun updateDirectCount(change: Int) {
-        mutableUiState.update { state ->
+        updateState { state ->
             if (state.isSaving) state else state.copy(
                 directCount = (state.directCount + change).coerceAtLeast(0)
             )
@@ -57,7 +74,7 @@ class AudienceCounterViewModel(
     }
 
     private fun resetDirectCount() {
-        mutableUiState.update { state ->
+        updateState { state ->
             if (state.isSaving) state else state.copy(directCount = 0)
         }
     }
@@ -77,7 +94,7 @@ class AudienceCounterViewModel(
     }
 
     private fun startRowCount() {
-        mutableUiState.update { state ->
+        updateState { state ->
             if (state.isSaving) state else state.copy(
                 rowCount = 0,
                 currentRow = 1,
@@ -89,7 +106,7 @@ class AudienceCounterViewModel(
     }
 
     private fun changeRowCount(count: Int) {
-        mutableUiState.update { state ->
+        updateState { state ->
             if (state.isSaving) state else state.copy(
                 rowCount = count.coerceAtLeast(0),
                 currentRow = 1,
@@ -100,7 +117,7 @@ class AudienceCounterViewModel(
     }
 
     private fun updatePeopleInCurrentRow(change: Int) {
-        mutableUiState.update { state ->
+        updateState { state ->
             if (state.isSaving || !state.isCountingRows) state else state.copy(
                 peopleInCurrentRow = (state.peopleInCurrentRow + change).coerceAtLeast(0)
             )
@@ -108,13 +125,13 @@ class AudienceCounterViewModel(
     }
 
     private fun resetCurrentRow() {
-        mutableUiState.update { state ->
+        updateState { state ->
             if (state.isSaving) state else state.copy(peopleInCurrentRow = 0)
         }
     }
 
     private fun completeCurrentRow() {
-        mutableUiState.update { state ->
+        updateState { state ->
             if (state.isSaving || state.rowCount <= 0 || state.currentRow > state.rowCount) {
                 state
             } else {
@@ -148,7 +165,7 @@ class AudienceCounterViewModel(
     }
 
     private fun dismissError() {
-        mutableUiState.update { it.copy(error = null) }
+        updateState { it.copy(error = null) }
     }
 
     private fun launchPersistence(
@@ -157,20 +174,38 @@ class AudienceCounterViewModel(
     ) {
         if (mutableUiState.value.isSaving) return
 
-        mutableUiState.update { it.copy(isSaving = true, error = null) }
+        updateState { it.copy(isSaving = true, error = null) }
         viewModelScope.launch {
             try {
                 operation()
-                mutableUiState.update { onSuccess(it).copy(isSaving = false) }
+                updateState { onSuccess(it).copy(isSaving = false) }
             } catch (cancellationException: CancellationException) {
-                mutableUiState.update { it.copy(isSaving = false) }
+                updateState { it.copy(isSaving = false) }
                 throw cancellationException
             } catch (_: Exception) {
-                mutableUiState.update {
+                updateState {
                     it.copy(isSaving = false, error = AudienceCounterError.PERSISTENCE)
                 }
             }
         }
+    }
+
+    private fun updateState(
+        transform: (AudienceCounterUiState) -> AudienceCounterUiState
+    ) {
+        mutableUiState.update { currentState ->
+            transform(currentState).also(::saveRestorableState)
+        }
+    }
+
+    private fun saveRestorableState(state: AudienceCounterUiState) {
+        savedStateHandle[DIRECT_COUNT_KEY] = state.directCount
+        savedStateHandle[ROW_COUNT_KEY] = state.rowCount
+        savedStateHandle[CURRENT_ROW_KEY] = state.currentRow
+        savedStateHandle[PEOPLE_IN_CURRENT_ROW_KEY] = state.peopleInCurrentRow
+        savedStateHandle[COMPLETED_ROW_COUNTS_KEY] = ArrayList(state.completedRowCounts)
+        savedStateHandle[SELECTED_TAB_INDEX_KEY] = state.selectedTabIndex
+        savedStateHandle[IS_COUNTING_ROWS_KEY] = state.isCountingRows
     }
 
     class Factory(
@@ -179,7 +214,23 @@ class AudienceCounterViewModel(
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             require(modelClass.isAssignableFrom(AudienceCounterViewModel::class.java))
-            return AudienceCounterViewModel(repository) as T
+            return AudienceCounterViewModel(repository, SavedStateHandle()) as T
         }
+
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
+            require(modelClass.isAssignableFrom(AudienceCounterViewModel::class.java))
+            return AudienceCounterViewModel(repository, extras.createSavedStateHandle()) as T
+        }
+    }
+
+    private companion object {
+        const val DIRECT_COUNT_KEY = "direct_count"
+        const val ROW_COUNT_KEY = "row_count"
+        const val CURRENT_ROW_KEY = "current_row"
+        const val PEOPLE_IN_CURRENT_ROW_KEY = "people_in_current_row"
+        const val COMPLETED_ROW_COUNTS_KEY = "completed_row_counts"
+        const val SELECTED_TAB_INDEX_KEY = "selected_tab_index"
+        const val IS_COUNTING_ROWS_KEY = "is_counting_rows"
     }
 }

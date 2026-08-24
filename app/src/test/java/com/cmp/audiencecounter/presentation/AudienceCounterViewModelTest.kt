@@ -1,5 +1,6 @@
 package com.cmp.audiencecounter.presentation
 
+import androidx.lifecycle.SavedStateHandle
 import com.cmp.audiencecounter.repository.AudienceRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -141,6 +142,58 @@ class AudienceCounterViewModelTest {
             advanceUntilIdle()
 
             assertFalse(viewModel.uiState.value.isSaving)
+        }
+
+    @Test
+    fun operationalStateIsRestoredFromSavedStateHandle() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val savedStateHandle = SavedStateHandle()
+            val repository = FakeAudienceRepository()
+            val viewModel = AudienceCounterViewModel(repository, savedStateHandle)
+            runCurrent()
+
+            viewModel.onAction(AudienceCounterAction.IncrementDirectCount)
+            viewModel.onAction(AudienceCounterAction.IncrementDirectCount)
+            viewModel.onAction(AudienceCounterAction.SelectTab(1))
+            viewModel.onAction(AudienceCounterAction.StartRowCount)
+            viewModel.onAction(AudienceCounterAction.ChangeRowCount(2))
+            viewModel.onAction(AudienceCounterAction.IncrementCurrentRow)
+            viewModel.onAction(AudienceCounterAction.CompleteCurrentRow)
+            viewModel.onAction(AudienceCounterAction.IncrementCurrentRow)
+
+            val restoredViewModel = AudienceCounterViewModel(repository, savedStateHandle)
+            runCurrent()
+            val restoredState = restoredViewModel.uiState.value
+
+            assertEquals(2, restoredState.directCount)
+            assertEquals(1, restoredState.selectedTabIndex)
+            assertEquals(2, restoredState.rowCount)
+            assertEquals(2, restoredState.currentRow)
+            assertEquals(1, restoredState.peopleInCurrentRow)
+            assertEquals(listOf(1), restoredState.completedRowCounts)
+            assertTrue(restoredState.isCountingRows)
+        }
+
+    @Test
+    fun transientErrorAndSavingStateAreNotRestored() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val savedStateHandle = SavedStateHandle()
+            val repository = FakeAudienceRepository().apply {
+                addFailure = IOException("Write failed")
+            }
+            val viewModel = AudienceCounterViewModel(repository, savedStateHandle)
+            runCurrent()
+            viewModel.onAction(AudienceCounterAction.IncrementDirectCount)
+            viewModel.onAction(AudienceCounterAction.SaveDirectCount)
+            runCurrent()
+            assertEquals(AudienceCounterError.PERSISTENCE, viewModel.uiState.value.error)
+
+            val restoredViewModel = AudienceCounterViewModel(repository, savedStateHandle)
+            runCurrent()
+
+            assertEquals(1, restoredViewModel.uiState.value.directCount)
+            assertFalse(restoredViewModel.uiState.value.isSaving)
+            assertNull(restoredViewModel.uiState.value.error)
         }
 }
 

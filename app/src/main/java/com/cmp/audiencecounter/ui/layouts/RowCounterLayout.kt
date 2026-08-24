@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.cmp.audiencecounter.presentation.AudienceCounterAction
 import com.cmp.audiencecounter.presentation.AudienceCounterUiState
 import com.cmp.audiencecounter.ui.layouts.landscape.LandscapeRowCounterLayout
@@ -16,7 +16,7 @@ fun RowCounterLayout(
     uiState: AudienceCounterUiState,
     onAction: (AudienceCounterAction) -> Unit
 ) {
-    var showDialog by remember { mutableStateOf(false) }
+    var showDialog by rememberSaveable { mutableStateOf(false) }
 
     BoxWithConstraints {
         if (maxWidth > maxHeight) {
