@@ -51,7 +51,7 @@ O **Audience Counter** é um aplicativo desenvolvido para contar a audiência em
 5. Abra um pull request no GitHub.
 
 ## Licença do Projeto
-Este projeto é licenciado sob a licença [MIT](LICENSE).
+Este projeto é licenciado sob a licença [MIT](LICENSE.txt).
 
 ## Autores do Projeto
 - **Cleriston Pereira** (GitHub: [CleristonMP](https://github.com/CleristonMP))

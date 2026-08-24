@@ -2,7 +2,7 @@ package com.cmp.audiencecounter.components
 
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import com.cmp.audiencecounter.ui.components.RowCountDisplay
 import org.junit.Rule
