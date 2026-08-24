@@ -4,7 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-fun getCurrentFormattedDate(): String {
+fun formatAudienceTimestamp(timestampMillis: Long): String {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-    return dateFormat.format(Date())
+    return dateFormat.format(Date(timestampMillis))
 }

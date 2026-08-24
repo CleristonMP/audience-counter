@@ -3,54 +3,43 @@ package com.cmp.audiencecounter.ui.layouts
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.cmp.audiencecounter.presentation.AudienceCounterAction
+import com.cmp.audiencecounter.presentation.AudienceCounterUiState
 import com.cmp.audiencecounter.ui.layouts.landscape.LandscapeDirectCounterLayout
 import com.cmp.audiencecounter.ui.layouts.portrait.PortraitDirectCounterLayout
-import com.cmp.audiencecounter.utils.getCurrentFormattedDate
 
 @Composable
 fun DirectCounterLayout(
-    savedAudiences: List<Pair<String, Int>>,
-    onSaveAudiences: (List<Pair<String, Int>>) -> Unit
+    uiState: AudienceCounterUiState,
+    onAction: (AudienceCounterAction) -> Unit
 ) {
-    var audience by remember { mutableIntStateOf(0) }
-    var isSaving by remember { mutableStateOf(false) }
-    var showDialog by remember { mutableStateOf(false) }
-
-    val formattedDateTime = getCurrentFormattedDate()
+    var showDialog by rememberSaveable { mutableStateOf(false) }
+    val layoutState = uiState.toDirectLayoutState()
+    val events = DirectCounterEvents(
+        onReset = { onAction(AudienceCounterAction.ResetDirectCount) },
+        onDecrement = { onAction(AudienceCounterAction.DecrementDirectCount) },
+        onIncrement = { onAction(AudienceCounterAction.IncrementDirectCount) },
+        onSave = { onAction(AudienceCounterAction.SaveDirectCount) },
+        onClearHistory = { onAction(AudienceCounterAction.ClearHistory) }
+    )
 
     BoxWithConstraints {
         if (maxWidth > maxHeight) {
             LandscapeDirectCounterLayout(
-                savedAudiences,
-                onSaveAudiences,
-                audience,
-                showDialog,
-                isSaving,
-                formattedDateTime,
-                onResetCounting = { audience = 0 },
-                onDecrement = { audience-- },
-                onIncrement = { audience++ },
-                onSaving = { value -> isSaving = value },
-                onShowingDialog = { value -> showDialog = value }
+                state = layoutState,
+                events = events,
+                showClearConfirmation = showDialog,
+                onClearConfirmationChange = { showDialog = it }
             )
-        }
-        else {
+        } else {
             PortraitDirectCounterLayout(
-                savedAudiences,
-                onSaveAudiences,
-                audience,
-                showDialog,
-                isSaving,
-                formattedDateTime,
-                onResetCounting = { audience = 0 },
-                onDecrement = { audience-- },
-                onIncrement = { audience++ },
-                onSaving = { value -> isSaving = value },
-                onShowingDialog = { value -> showDialog = value }
+                state = layoutState,
+                events = events,
+                showClearConfirmation = showDialog,
+                onClearConfirmationChange = { showDialog = it }
             )
         }
     }

@@ -22,11 +22,10 @@ class CounterButtonTest {
             CounterButton(
                 text = "+",
                 onClick = {},
-                backgroundColor = Color(73 / 255f, 116 / 255f, 145 / 255f),
-                containerColor = Color(73 / 255f, 116 / 255f, 145 / 255f),
+                color = Color(73 / 255f, 116 / 255f, 145 / 255f),
                 size = 120.dp,
                 fontSize = 48.sp,
-                shadowShapeSize = 16.dp,
+                cornerRadius = 16.dp,
                 contentColor = Color.White
             )
         }
@@ -47,11 +46,10 @@ class CounterButtonTest {
                     clicked = true
                     audience++
                 },
-                backgroundColor = Color(73 / 255f, 116 / 255f, 145 / 255f),
-                containerColor = Color(73 / 255f, 116 / 255f, 145 / 255f),
+                color = Color(73 / 255f, 116 / 255f, 145 / 255f),
                 size = 120.dp,
                 fontSize = 48.sp,
-                shadowShapeSize = 16.dp,
+                cornerRadius = 16.dp,
                 contentColor = Color.White
             )
         }
@@ -68,11 +66,10 @@ class CounterButtonTest {
             CounterButton(
                 text = "-",
                 onClick = {},
-                backgroundColor = Color(237 / 255f, 130 / 255f, 86 / 255f),
-                containerColor = Color(237 / 255f, 130 / 255f, 86 / 255f),
+                color = Color(237 / 255f, 130 / 255f, 86 / 255f),
                 size = 60.dp,
                 fontSize = 24.sp,
-                shadowShapeSize = 16.dp,
+                cornerRadius = 16.dp,
                 contentColor = Color.White
             )
         }
@@ -93,11 +90,10 @@ class CounterButtonTest {
                     clicked = true
                     audience--
                 },
-                backgroundColor = Color(237 / 255f, 130 / 255f, 86 / 255f),
-                containerColor = Color(237 / 255f, 130 / 255f, 86 / 255f),
+                color = Color(237 / 255f, 130 / 255f, 86 / 255f),
                 size = 60.dp,
                 fontSize = 24.sp,
-                shadowShapeSize = 16.dp,
+                cornerRadius = 16.dp,
                 contentColor = Color.White
             )
         }

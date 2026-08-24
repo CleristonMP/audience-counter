@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.cmp.audiencecounter.R
+import com.cmp.audiencecounter.ui.theme.SecondaryAction
 
 @Composable
 fun ResetButton(
@@ -23,13 +24,13 @@ fun ResetButton(
         enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
-            contentColor = Color.DarkGray
+            contentColor = SecondaryAction
         ),
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .border(
                 width = 1.dp,
-                color = Color.DarkGray,
+                color = SecondaryAction,
                 shape = RoundedCornerShape(16.dp)
             )
     ) {

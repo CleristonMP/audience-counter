@@ -3,48 +3,43 @@ package com.cmp.audiencecounter.layouts
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.cmp.audiencecounter.presentation.AudienceCounterAction
+import com.cmp.audiencecounter.presentation.AudienceCounterUiState
 import com.cmp.audiencecounter.ui.layouts.DirectCounterLayout
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 
 class DirectCounterLayoutTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
     @Test
-    fun testDirectCounterLayoutDisplaysCorrectly() {
+    fun directCounterLayoutDisplaysCurrentState() {
         composeTestRule.setContent {
             DirectCounterLayout(
-                savedAudiences = emptyList(),
-                onSaveAudiences = {}
+                uiState = AudienceCounterUiState(directCount = 5),
+                onAction = {}
             )
         }
 
-        // Verifica se o título da contagem direta é exibido
-        composeTestRule.onNodeWithText("Contador de Assistência").assertExists()
-
-        // Verifica se o botão "Salvar" é exibido
+        composeTestRule.onNodeWithText("5").assertExists()
         composeTestRule.onNodeWithText("Salvar").assertExists()
-
-        // Verifica se o botão "Zerar" é exibido
         composeTestRule.onNodeWithText("Zerar").assertExists()
     }
 
     @Test
-    fun testSavingAudience() {
-        var saved = false
+    fun saveButtonEmitsSaveAction() {
+        var receivedAction: AudienceCounterAction? = null
         composeTestRule.setContent {
             DirectCounterLayout(
-                savedAudiences = emptyList(),
-                onSaveAudiences = { saved = true }
+                uiState = AudienceCounterUiState(directCount = 1),
+                onAction = { receivedAction = it }
             )
         }
 
-        // Simula o clique no botão "Salvar"
         composeTestRule.onNodeWithText("Salvar").performClick()
 
-        // Verifica se a função de salvar foi chamada
-        assert(saved)
+        assertEquals(AudienceCounterAction.SaveDirectCount, receivedAction)
     }
 }

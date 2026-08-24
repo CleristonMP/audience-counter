@@ -22,4 +22,5 @@
     <string name="save_total">Salvar Total</string>
     <string name="direct_count_tab_title">Contagem Direta</string>
     <string name="row_count_tab_title">Contagem por Fileira</string>
+    <string name="persistence_error_message">Não foi possível concluir a operação. Tente novamente.</string>
 </resources>

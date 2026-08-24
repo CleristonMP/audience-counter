@@ -6,7 +6,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 @RunWith(RobolectricTestRunner::class)
@@ -14,16 +13,21 @@ import java.util.Locale
 class UtilsTest {
 
     @Test
-    fun testGetCurrentFormattedDate() {
-        val currentDate = getCurrentFormattedDateForTest()
-        val expectedDate = SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(Date())
+    fun formatAudienceTimestampUsesExpectedFormat() {
+        val formattedDate = formatAudienceTimestamp(1_777_000_000_000L)
 
-        assertTrue(currentDate == expectedDate)
+        assertTrue(formattedDate.matches(Regex("\\d{2}/\\d{2}/\\d{4} \\d{2}:\\d{2}")))
     }
-}
 
-fun getCurrentFormattedDateForTest(): String {
-    val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    val timeFormatter = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-    return formatter.format(Date()) + " " + timeFormatter.format(Date())
+    @Test
+    fun formatAudienceTimestampRepresentsProvidedInstant() {
+        val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).apply {
+            isLenient = false
+        }
+        val timestamp = 1_777_000_000_000L
+        val formattedDate = formatAudienceTimestamp(timestamp)
+        val parsedDate = requireNotNull(formatter.parse(formattedDate))
+
+        assertTrue(kotlin.math.abs(parsedDate.time - timestamp) < 60_000)
+    }
 }

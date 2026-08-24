@@ -14,7 +14,7 @@ fun NextRowButton(
 ) {
     Button(
         onClick = onClick,
-        enabled = currentRow <= rowCount // Desabilita quando chegar na última fileira
+        enabled = currentRow <= rowCount
     ) {
         Text(
             if (currentRow < rowCount) stringResource(R.string.next_row)

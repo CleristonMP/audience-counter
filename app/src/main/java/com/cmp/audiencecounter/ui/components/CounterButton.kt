@@ -1,6 +1,5 @@
 package com.cmp.audiencecounter.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -13,27 +12,26 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import com.cmp.audiencecounter.ui.theme.CounterContent
 
 @Composable
 fun CounterButton(
     text: String,
     onClick: () -> Unit,
-    backgroundColor: Color,
-    containerColor: Color,
-    contentColor: Color,
+    color: Color,
     modifier: Modifier = Modifier,
     size: Dp,
     fontSize: TextUnit,
-    shadowShapeSize: Dp = 0.dp,
+    cornerRadius: Dp = 0.dp,
+    contentColor: Color = CounterContent
 ) {
     Button(
         onClick = onClick,
         modifier = modifier
             .size(size)
-            .clip(RoundedCornerShape(shadowShapeSize))
-            .background(backgroundColor),
+            .clip(RoundedCornerShape(cornerRadius)),
         colors = ButtonDefaults.buttonColors(
-            containerColor = containerColor,
+            containerColor = color,
             contentColor = contentColor
         )
     ) {
