@@ -13,7 +13,7 @@ As correções serão entregues em fases pequenas e verificáveis. Cada bug corr
 | Fase | Escopo | Estado |
 | --- | --- | --- |
 | 0 | Rede de segurança e testes de caracterização | Em andamento |
-| 1 | Persistência resiliente | Pendente |
+| 1 | Persistência resiliente | Concluída |
 | 2 | Salvamento assíncrono confiável | Pendente |
 | 3 | ViewModel e estado único | Pendente |
 | 4 | Restauração de estado | Pendente |
@@ -63,6 +63,10 @@ Impedir que dados inválidos ou falhas de leitura encerrem a coleta do DataStore
 - Conteúdo vazio, incompleto ou inválido não causa crash.
 - Registros válidos continuam disponíveis quando outro registro está corrompido.
 - Todos os cenários possuem testes unitários.
+
+### Decisão técnica
+
+O formato legado com delimitadores foi preservado nesta fase para manter compatibilidade com os dados já instalados. A migração para JSON ou Proto DataStore será reavaliada junto da introdução de `AudienceRecord`, na Fase 5; até lá, a leitura defensiva impede que registros malformados interrompam o fluxo.
 
 ## Fase 2 — Corrigir o fluxo assíncrono de salvamento
 
