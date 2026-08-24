@@ -20,7 +20,7 @@ As correções serão entregues em fases pequenas e verificáveis. Cada bug corr
 | 5 | Tipagem e validação | Concluída |
 | 6 | Correção da contagem por fileiras | Concluída |
 | 7 | Legibilidade e redução de duplicação | Concluída |
-| 8 | Validação final | Pendente |
+| 8 | Validação final | Concluída |
 
 ## Fase 0 — Criar uma rede de segurança
 
@@ -230,6 +230,14 @@ Confirmar que a evolução arquitetural não introduziu regressões.
 - Build, testes e lint passam.
 - Todos os bugs encontrados na revisão possuem testes de regressão.
 - Não existe perda silenciosa de dados.
+
+### Resultado da validação
+
+- `assembleDebug`, compilação Kotlin e lint concluídos sem falhas.
+- 30 testes unitários cobrem ViewModel, repositório, parsing defensivo, restauração, limites, concorrência e falhas assíncronas.
+- 40 testes instrumentados cobrem componentes, salvamento real no DataStore, erro, recriação da Activity, troca de abas e layouts portrait e landscape.
+- Dados persistidos malformados foram injetados no emulador junto de um registro válido; o registro inválido foi descartado sem crash e o válido permaneceu visível.
+- Falhas simuladas de gravação e limpeza preservam contagem e histórico, encerram `isSaving` e expõem erro para a UI, impedindo perda silenciosa.
 
 ## Ordem das entregas
 

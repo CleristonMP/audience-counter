@@ -127,6 +127,29 @@ class AudienceCounterViewModelTest {
         }
 
     @Test
+    fun failedRowSavePreservesProgressAndExposesError() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val repository = FakeAudienceRepository().apply {
+                addFailure = IOException("Write failed")
+            }
+            val viewModel = AudienceCounterViewModel(repository)
+            runCurrent()
+            viewModel.onAction(AudienceCounterAction.StartRowCount)
+            viewModel.onAction(AudienceCounterAction.ChangeRowCount(1))
+            viewModel.onAction(AudienceCounterAction.IncrementCurrentRow)
+            viewModel.onAction(AudienceCounterAction.CompleteCurrentRow)
+
+            viewModel.onAction(AudienceCounterAction.SaveRowTotal)
+            runCurrent()
+
+            val state = viewModel.uiState.value
+            assertEquals(1, state.rowCount)
+            assertEquals(listOf(1), state.completedRowCounts)
+            assertEquals(AudienceCounterError.PERSISTENCE, state.error)
+            assertFalse(state.isSaving)
+        }
+
+    @Test
     fun clearHistoryUsesRepositoryAndTracksOperationState() =
         runTest(mainDispatcherRule.dispatcher) {
             val clearGate = CompletableDeferred<Unit>()
@@ -143,6 +166,24 @@ class AudienceCounterViewModelTest {
             clearGate.complete(Unit)
             advanceUntilIdle()
 
+            assertFalse(viewModel.uiState.value.isSaving)
+        }
+
+    @Test
+    fun failedClearKeepsHistoryAndExposesError() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val history = listOf(AudienceRecord(1_777_000_000_000L, 25))
+            val repository = FakeAudienceRepository(history).apply {
+                clearFailure = IOException("Clear failed")
+            }
+            val viewModel = AudienceCounterViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(AudienceCounterAction.ClearHistory)
+            runCurrent()
+
+            assertEquals(history, viewModel.uiState.value.savedAudiences)
+            assertEquals(AudienceCounterError.PERSISTENCE, viewModel.uiState.value.error)
             assertFalse(viewModel.uiState.value.isSaving)
         }
 
@@ -259,6 +300,7 @@ private class FakeAudienceRepository(
     var addCalls = 0
     var clearCalls = 0
     var addFailure: Throwable? = null
+    var clearFailure: Throwable? = null
     var addGate: CompletableDeferred<Unit>? = null
     var clearGate: CompletableDeferred<Unit>? = null
 
@@ -272,6 +314,7 @@ private class FakeAudienceRepository(
     override suspend fun clearAudiences() {
         clearCalls++
         clearGate?.await()
+        clearFailure?.let { throw it }
         audienceState.value = emptyList()
     }
 }
