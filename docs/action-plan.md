@@ -18,7 +18,7 @@ As correções serão entregues em fases pequenas e verificáveis. Cada bug corr
 | 3 | ViewModel e estado único | Concluída |
 | 4 | Restauração de estado | Concluída |
 | 5 | Tipagem e validação | Concluída |
-| 6 | Correção da contagem por fileiras | Pendente |
+| 6 | Correção da contagem por fileiras | Concluída |
 | 7 | Legibilidade e redução de duplicação | Pendente |
 | 8 | Validação final | Pendente |
 
@@ -182,6 +182,10 @@ Associar corretamente cada contagem à sua fileira e simplificar o componente.
 
 - `[10, 20, 30]` é exibido como fileiras 1, 2 e 3 com os respectivos valores.
 - Os testes verificam todos os itens exibidos.
+
+### Decisão técnica
+
+As fileiras concluídas são exibidas na ordem natural de contagem. O índice visual é derivado diretamente da posição do valor na `List<Int>`, de modo que `[10, 20, 30]` resulta em fileiras 1, 2 e 3 com 10, 20 e 30 pessoas, respectivamente. O componente permanece desacoplado do estado mutável do Compose.
 
 ## Fase 7 — Reduzir duplicação e melhorar legibilidade
 

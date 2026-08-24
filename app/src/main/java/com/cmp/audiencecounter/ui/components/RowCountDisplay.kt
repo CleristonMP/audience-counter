@@ -26,11 +26,10 @@ fun RowCountDisplay(rowCounts: List<Int>) {
                 modifier = Modifier.height(56.dp) // Define a altura fixa da caixa
             ) {
                 itemsIndexed(rowCounts) { index, count ->
-                    val reversedIndex = rowCounts.size - 1 - index
                     Text(
                         stringResource(
                             R.string.row_count_tracking_text,
-                            reversedIndex + 1,
+                            index + 1,
                             count
                         )
                     )
