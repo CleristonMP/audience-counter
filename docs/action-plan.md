@@ -12,7 +12,7 @@ As correções serão entregues em fases pequenas e verificáveis. Cada bug corr
 
 | Fase | Escopo | Estado |
 | --- | --- | --- |
-| 0 | Rede de segurança e testes de caracterização | Em andamento |
+| 0 | Rede de segurança e testes de caracterização | Concluída |
 | 1 | Persistência resiliente | Concluída |
 | 2 | Salvamento assíncrono confiável | Concluída |
 | 3 | ViewModel e estado único | Concluída |
